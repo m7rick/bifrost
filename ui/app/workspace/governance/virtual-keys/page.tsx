@@ -121,7 +121,7 @@ export default function GovernanceVirtualKeysPage() {
 	};
 
 	return (
-		<div className="mx-auto w-full max-w-7xl">
+		<div className="mx-auto w-full">
 			<VirtualKeysTable
 				virtualKeys={virtualKeysData?.virtual_keys || []}
 				totalCount={virtualKeysData?.total_count || 0}

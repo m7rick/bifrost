@@ -208,13 +208,14 @@ export default function MCPClientsTable({
 							<TableHead className="font-semibold">{t("workspace.mcp.enabledTools")}</TableHead>
 							<TableHead className="font-semibold">{t("workspace.mcp.autoExecuteTools")}</TableHead>
 							<TableHead className="font-semibold">{t("workspace.mcp.state")}</TableHead>
+							<TableHead className="font-semibold">{t("workspace.mcp.enabled")}</TableHead>
 							<TableHead className="w-20 text-right"></TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{mcpClients.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={8} className="h-24 text-center">
+								<TableCell colSpan={9} className="h-24 text-center">
 									<span className="text-muted-foreground text-sm">{t("workspace.mcp.noMatchingServers")}</span>
 								</TableCell>
 							</TableRow>
@@ -276,6 +277,9 @@ export default function MCPClientsTable({
 										<TableCell>
 											<Badge className={MCP_STATUS_COLORS[c.state]}>{c.state}</Badge>
 										</TableCell>
+										<TableCell>
+											<Badge variant={c.config.disabled ? "secondary" : "default"}>{c.config.disabled ? "Disabled" : "Enabled"}</Badge>
+										</TableCell>
 										<TableCell className="space-x-2 text-right" onClick={(e) => e.stopPropagation()}>
 											<span title={isPerUserOAuth ? t("workspace.mcp.reconnectUnsupported") : t("workspace.mcp.reconnect")}>
 												<Button
@@ -283,7 +287,12 @@ export default function MCPClientsTable({
 													size="icon"
 													aria-label={isPerUserOAuth ? t("workspace.mcp.reconnectUnsupported") : t("workspace.mcp.reconnect")}
 													onClick={() => handleReconnect(c)}
-													disabled={isPerUserOAuth || reconnectingClients.includes(c.config.client_id) || !hasUpdateMCPClientAccess}
+													disabled={
+														isPerUserOAuth ||
+														c.config.disabled ||
+														reconnectingClients.includes(c.config.client_id) ||
+														!hasUpdateMCPClientAccess
+													}
 												>
 													{reconnectingClients.includes(c.config.client_id) ? (
 														<Loader2 className="h-4 w-4 animate-spin" />
