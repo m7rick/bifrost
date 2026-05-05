@@ -6,6 +6,7 @@ import { RbacOperation, RbacResource, useRbac } from "@enterprise/lib";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
+import i18n from "@/lib/i18n";
 
 const POLLING_INTERVAL = 5000;
 const PAGE_SIZE = 25;
@@ -87,11 +88,11 @@ export default function GovernanceVirtualKeysPage() {
 		if (shownErrorsRef.current.has(errorKey)) return;
 		shownErrorsRef.current.add(errorKey);
 		if (vkError && teamsError && customersError) {
-			toast.error("Failed to load governance data.");
+			toast.error(i18n.t("workspace.virtualKeys.loadGovernanceDataFailed"));
 		} else {
-			if (vkError) toast.error(`Failed to load virtual keys: ${getErrorMessage(vkError)}`);
-			if (teamsError) toast.error(`Failed to load teams: ${getErrorMessage(teamsError)}`);
-			if (customersError) toast.error(`Failed to load customers: ${getErrorMessage(customersError)}`);
+			if (vkError) toast.error(i18n.t("workspace.virtualKeys.loadVirtualKeysFailed", { error: getErrorMessage(vkError) }));
+			if (teamsError) toast.error(i18n.t("workspace.virtualKeys.loadTeamsFailed", { error: getErrorMessage(teamsError) }));
+			if (customersError) toast.error(i18n.t("workspace.virtualKeys.loadCustomersFailed", { error: getErrorMessage(customersError) }));
 		}
 	}, [vkError, teamsError, customersError]);
 

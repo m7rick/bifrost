@@ -11,6 +11,7 @@ import { cleanPathOverrides } from "@/lib/utils/validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AllowedRequestsFields } from "../fragments/allowedRequestsFields";
@@ -37,6 +38,7 @@ interface Props extends AddCustomProviderSheetContentProps {
 }
 
 export function AddCustomProviderSheetContent({ show = true, onClose, onSave }: AddCustomProviderSheetContentProps) {
+	const { t } = useTranslation();
 	const [addProvider, { isLoading: isAddingProvider }] = useCreateProviderMutation();
 	const form = useForm<FormData>({
 		resolver: zodResolver(formSchema),
@@ -111,7 +113,7 @@ export function AddCustomProviderSheetContent({ show = true, onClose, onSave }: 
 				form.reset();
 			})
 			.catch((err) => {
-				toast.error("Failed to add provider", {
+				toast.error(t("workspace.providers.failedToAdd"), {
 					description: getErrorMessage(err),
 				});
 			});
@@ -123,8 +125,8 @@ export function AddCustomProviderSheetContent({ show = true, onClose, onSave }: 
 	return (
 		<>
 			<SheetHeader className="flex shrink-0 flex-col items-start">
-				<SheetTitle>Add Custom Provider</SheetTitle>
-				<SheetDescription>Enter the details of your custom provider.</SheetDescription>
+				<SheetTitle>{t("workspace.providers.addCustom.title")}</SheetTitle>
+				<SheetDescription>{t("workspace.providers.addCustom.description")}</SheetDescription>
 			</SheetHeader>
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)} className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -134,10 +136,10 @@ export function AddCustomProviderSheetContent({ show = true, onClose, onSave }: 
 							name="name"
 							render={({ field }) => (
 								<FormItem className="flex flex-col gap-3">
-									<FormLabel className="text-right">Name</FormLabel>
+									<FormLabel className="text-right">{t("workspace.providers.addCustom.name")}</FormLabel>
 									<div className="col-span-3">
 										<FormControl>
-											<Input placeholder="Name" data-testid="custom-provider-name" {...field} />
+											<Input placeholder={t("workspace.providers.addCustom.name")} data-testid="custom-provider-name" {...field} />
 										</FormControl>
 										<FormMessage />
 									</div>
@@ -149,12 +151,12 @@ export function AddCustomProviderSheetContent({ show = true, onClose, onSave }: 
 							name="baseFormat"
 							render={({ field }) => (
 								<FormItem className="flex flex-col gap-3">
-									<FormLabel>Base Format</FormLabel>
+									<FormLabel>{t("workspace.providers.addCustom.baseFormat")}</FormLabel>
 									<div>
 										<FormControl>
 											<Select onValueChange={field.onChange} value={field.value}>
 												<SelectTrigger className="w-full" data-testid="base-provider-select">
-													<SelectValue placeholder="Select base format" />
+													<SelectValue placeholder={t("workspace.providers.addCustom.selectBaseFormat")} />
 												</SelectTrigger>
 												<SelectContent>
 													<SelectItem value="openai">OpenAI</SelectItem>
@@ -176,7 +178,7 @@ export function AddCustomProviderSheetContent({ show = true, onClose, onSave }: 
 							name="base_url"
 							render={({ field }) => (
 								<FormItem className="flex flex-col gap-3">
-									<FormLabel>Base URL</FormLabel>
+									<FormLabel>{t("workspace.providers.baseUrl")}</FormLabel>
 									<div>
 										<FormControl>
 											<Input
@@ -200,9 +202,9 @@ export function AddCustomProviderSheetContent({ show = true, onClose, onSave }: 
 										<div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
 											<div className="space-y-0.5">
 												<label htmlFor="drop-excess-requests" className="text-sm font-medium">
-													Is Keyless?
+													{t("workspace.providers.isKeyless")}
 												</label>
-												<p className="text-muted-foreground text-sm">Whether the custom provider requires a key</p>
+												<p className="text-muted-foreground text-sm">{t("workspace.providers.isKeylessDescription")}</p>
 											</div>
 											<Switch
 												id="drop-excess-requests"
@@ -220,10 +222,10 @@ export function AddCustomProviderSheetContent({ show = true, onClose, onSave }: 
 						<AllowedRequestsFields control={form.control} providerType={form.watch("baseFormat") as BaseProvider} />
 						<div className="align-end mt-10 ml-auto flex flex-row gap-2 border-t pt-4">
 							<Button type="button" variant="outline" onClick={onClose} className="ml-auto" data-testid="custom-provider-cancel-btn">
-								Cancel
+								{t("common.cancel")}
 							</Button>
 							<Button type="submit" isLoading={isAddingProvider} data-testid="custom-provider-save-btn">
-								Add
+								{t("common.add")}
 							</Button>
 						</div>
 					</div>

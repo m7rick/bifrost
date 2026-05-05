@@ -16,6 +16,7 @@ import { RbacOperation, RbacResource, useRbac } from "@enterprise/lib";
 import { Info } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { OAuth2Authorizer } from "./oauth2Authorizer";
 
 interface ClientFormProps {
@@ -51,6 +52,7 @@ const emptyForm: CreateMCPClientRequest = {
 };
 
 const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
+	const { t } = useTranslation();
 	const hasCreateMCPClientAccess = useRbac(RbacResource.MCPGateway, RbacOperation.Create);
 	const { toast } = useToast();
 	const [createMCPClient] = useCreateMCPClientMutation();
@@ -107,11 +109,11 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 		if (connectionType === "http" || connectionType === "sse") {
 			const connVal = data.connection_string?.value || "";
 			if (!connVal.trim()) {
-				setError("connection_string", { message: "Connection URL is required" });
+				setError("connection_string", { message: t("workspace.mcpForm.connectionUrlRequired") });
 				hasErrors = true;
 			} else if (!/^((https?:\/\/.+)|(env\.[A-Z_]+))$/.test(connVal)) {
 				setError("connection_string", {
-					message: "Connection URL must start with http://, https://, or be an environment variable (env.VAR_NAME)",
+					message: t("workspace.mcpForm.connectionUrlInvalid"),
 				});
 				hasErrors = true;
 			}
@@ -120,25 +122,25 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 		if (connectionType === "stdio") {
 			const cmd = data.stdio_config?.command || "";
 			if (!cmd.trim()) {
-				setError("stdio_config.command", { message: "Command is required for STDIO connections" });
+				setError("stdio_config.command", { message: t("workspace.mcpForm.commandRequired") });
 				hasErrors = true;
 			} else if (/[<>|&;]/.test(cmd)) {
-				setError("stdio_config.command", { message: "Command cannot contain special shell characters" });
+				setError("stdio_config.command", { message: t("workspace.mcpForm.commandInvalid") });
 				hasErrors = true;
 			}
 		}
 
 		if (authType === "oauth" || authType === "per_user_oauth") {
 			if (data.oauth_config?.authorize_url && !/^https?:\/\/.+$/.test(data.oauth_config.authorize_url)) {
-				setError("oauth_config.authorize_url", { message: "Authorize URL must start with http:// or https://" });
+				setError("oauth_config.authorize_url", { message: t("workspace.mcpForm.authorizeUrlInvalid") });
 				hasErrors = true;
 			}
 			if (data.oauth_config?.token_url && !/^https?:\/\/.+$/.test(data.oauth_config.token_url)) {
-				setError("oauth_config.token_url", { message: "Token URL must start with http:// or https://" });
+				setError("oauth_config.token_url", { message: t("workspace.mcpForm.tokenUrlInvalid") });
 				hasErrors = true;
 			}
 			if (data.oauth_config?.registration_url && !/^https?:\/\/.+$/.test(data.oauth_config.registration_url)) {
-				setError("oauth_config.registration_url", { message: "Registration URL must start with http:// or https://" });
+				setError("oauth_config.registration_url", { message: t("workspace.mcpForm.registrationUrlInvalid") });
 				hasErrors = true;
 			}
 		}
@@ -186,13 +188,13 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 				});
 			} else {
 				setIsLoading(false);
-				toast({ title: "Success", description: "Server created" });
+				toast({ title: t("workspace.mcpForm.successTitle"), description: t("workspace.mcpForm.serverCreated") });
 				onSaved();
 				onClose();
 			}
 		} catch (error) {
 			setIsLoading(false);
-			toast({ title: "Error", description: getErrorMessage(error), variant: "destructive" });
+			toast({ title: t("workspace.mcpForm.errorTitle"), description: getErrorMessage(error), variant: "destructive" });
 		}
 	};
 
@@ -200,8 +202,8 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 		<Sheet open={open} onOpenChange={(open) => !open && onClose()}>
 			<SheetContent className="flex w-full flex-col overflow-x-hidden px-0">
 				<SheetHeader className="flex flex-col items-start px-7 pt-8">
-					<SheetTitle>New MCP Server</SheetTitle>
-					<SheetDescription>Configure and connect to a new Model Context Protocol server.</SheetDescription>
+					<SheetTitle>{t("workspace.mcpForm.newServerTitle")}</SheetTitle>
+					<SheetDescription>{t("workspace.mcpForm.newServerDescription")}</SheetDescription>
 				</SheetHeader>
 
 				<Form {...methods}>
@@ -212,19 +214,25 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 								control={control}
 								name="name"
 								rules={{
-									required: "Server name is required",
-									minLength: { value: 3, message: "Server name must be at least 3 characters" },
-									maxLength: { value: 50, message: "Server name cannot exceed 50 characters" },
+									required: t("workspace.mcpForm.serverNameRequired"),
+									minLength: { value: 3, message: t("workspace.mcpForm.serverNameMin") },
+									maxLength: { value: 50, message: t("workspace.mcpForm.serverNameMax") },
 									validate: {
-										format: (v) => /^[a-zA-Z0-9_]+$/.test(v) || "Server name can only contain letters, numbers, and underscores",
-										noLeadingDigit: (v) => !/^[0-9]/.test(v) || "Server name cannot start with a number",
+										format: (v) => /^[a-zA-Z0-9_]+$/.test(v) || t("workspace.mcpForm.serverNameFormat"),
+										noLeadingDigit: (v) => !/^[0-9]/.test(v) || t("workspace.mcpForm.serverNameLeadingDigit"),
 									},
 								}}
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Name</FormLabel>
+										<FormLabel>{t("workspace.mcpForm.name")}</FormLabel>
 										<FormControl>
-											<Input id="client-name" data-testid="client-name-input" placeholder="Server name" maxLength={50} {...field} />
+											<Input
+												id="client-name"
+												data-testid="client-name-input"
+												placeholder={t("workspace.mcpForm.serverNamePlaceholder")}
+												maxLength={50}
+												{...field}
+											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -237,7 +245,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 								name="connection_type"
 								render={({ field }) => (
 									<FormItem className="w-full">
-										<FormLabel>Connection Type</FormLabel>
+										<FormLabel>{t("workspace.mcpForm.connectionType")}</FormLabel>
 										<Select
 											value={field.value}
 											onValueChange={(value: MCPConnectionType) => {
@@ -252,18 +260,18 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 										>
 											<FormControl>
 												<SelectTrigger className="w-full" data-testid="connection-type-select">
-													<SelectValue placeholder="Select connection type" />
+													<SelectValue placeholder={t("workspace.mcpForm.selectConnectionType")} />
 												</SelectTrigger>
 											</FormControl>
 											<SelectContent>
 												<SelectItem value="http" data-testid="connection-type-http">
-													HTTP (Streamable)
+													{t("workspace.mcpForm.httpStreamable")}
 												</SelectItem>
 												<SelectItem value="sse" data-testid="connection-type-sse">
-													Server-Sent Events (SSE)
+													{t("workspace.mcpForm.sse")}
 												</SelectItem>
 												<SelectItem value="stdio" data-testid="connection-type-stdio">
-													STDIO
+													{t("workspace.mcpForm.stdio")}
 												</SelectItem>
 											</SelectContent>
 										</Select>
@@ -279,7 +287,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 								render={({ field }) => (
 									<div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
 										<div className="flex items-center gap-2">
-											<Label htmlFor="code-mode">Code Mode Server</Label>
+											<Label htmlFor="code-mode">{t("workspace.mcpForm.codeModeServer")}</Label>
 											<TooltipProvider>
 												<Tooltip>
 													<TooltipTrigger asChild>
@@ -289,13 +297,13 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 															rel="noopener noreferrer"
 															data-testid="code-mode-link-help"
 															className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded focus-visible:ring-2 focus-visible:outline-none"
-															aria-label="Learn more about Code Mode"
+															aria-label={t("workspace.mcpForm.learnMoreCodeMode")}
 														>
 															<Info className="h-4 w-4 cursor-help" />
 														</a>
 													</TooltipTrigger>
 													<TooltipContent>
-														<p>Learn more about Code Mode</p>
+														<p>{t("workspace.mcpForm.learnMoreCodeMode")}</p>
 													</TooltipContent>
 												</Tooltip>
 											</TooltipProvider>
@@ -312,22 +320,24 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 								render={({ field }) => (
 									<div className="flex items-center justify-between space-x-2 rounded-lg border p-4">
 										<div className="flex items-center gap-2">
-											<Label htmlFor="ping-available">Ping Available for Health Check</Label>
+											<Label htmlFor="ping-available">{t("workspace.mcpForm.pingHealthCheck")}</Label>
 											<TooltipProvider>
 												<Tooltip>
 													<TooltipTrigger asChild>
 														<Info className="text-muted-foreground h-4 w-4 cursor-help" />
 													</TooltipTrigger>
 													<TooltipContent className="max-w-xs">
-														<p>
-															Enable to use lightweight ping method for health checks. Disable if your MCP server doesn't support ping -
-															will use listTools instead.
-														</p>
+														<p>{t("workspace.mcpForm.pingHealthCheckDescription")}</p>
 													</TooltipContent>
 												</Tooltip>
 											</TooltipProvider>
 										</div>
-										<Switch id="ping-available" data-testid="mcp-is-ping-available" checked={field.value === true} onCheckedChange={field.onChange} />
+										<Switch
+											id="ping-available"
+											data-testid="mcp-is-ping-available"
+											checked={field.value === true}
+											onCheckedChange={field.onChange}
+										/>
 									</div>
 								)}
 							/>
@@ -341,7 +351,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 										render={({ field }) => (
 											<FormItem>
 												<div className="flex w-fit items-center gap-1">
-													<FormLabel>Connection URL</FormLabel>
+													<FormLabel>{t("workspace.mcpForm.connectionUrl")}</FormLabel>
 													<TooltipProvider>
 														<Tooltip>
 															<TooltipTrigger asChild>
@@ -350,10 +360,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 																</span>
 															</TooltipTrigger>
 															<TooltipContent className="max-w-fit">
-																<p>
-																	Use <code className="rounded bg-neutral-100 px-1 py-0.5 text-neutral-800">env.&lt;VAR&gt;</code> to read
-																	the value from an environment variable.
-																</p>
+																<p>{t("workspace.mcpForm.envVarHint")}</p>
 															</TooltipContent>
 														</Tooltip>
 													</TooltipProvider>
@@ -364,7 +371,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 														field.onChange(value);
 														clearErrors("connection_string");
 													}}
-													placeholder="http://your-mcp-server:3000 or env.MCP_SERVER_URL"
+													placeholder={t("workspace.mcpForm.connectionUrlPlaceholder")}
 													data-testid="connection-url-input"
 												/>
 												<FormMessage />
@@ -378,25 +385,25 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 										name="auth_type"
 										render={({ field }) => (
 											<FormItem className="w-full">
-												<FormLabel>Authentication Type</FormLabel>
+												<FormLabel>{t("workspace.mcpForm.authType")}</FormLabel>
 												<Select value={field.value} onValueChange={(value: MCPAuthType) => field.onChange(value)}>
 													<FormControl>
 														<SelectTrigger className="w-full" data-testid="auth-type-select">
-															<SelectValue placeholder="Select authentication type" />
+															<SelectValue placeholder={t("workspace.mcpForm.selectAuthType")} />
 														</SelectTrigger>
 													</FormControl>
 													<SelectContent>
 														<SelectItem value="none" data-testid="auth-type-none">
-															None
+															{t("workspace.mcpForm.none")}
 														</SelectItem>
 														<SelectItem value="headers" data-testid="auth-type-headers">
-															Headers
+															{t("workspace.mcpForm.headers")}
 														</SelectItem>
 														<SelectItem value="oauth" data-testid="auth-type-oauth">
-															OAuth 2.0
+															{t("workspace.mcpForm.oauth")}
 														</SelectItem>
 														<SelectItem value="per_user_oauth" data-testid="auth-type-per-user-oauth">
-															Per-User OAuth 2.0
+															{t("workspace.mcpForm.perUserOauth")}
 														</SelectItem>
 													</SelectContent>
 												</Select>
@@ -451,7 +458,12 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 															</TooltipProvider>
 														</div>
 														<FormControl>
-															<Input {...field} value={field.value ?? ""} placeholder="your-client-id (auto-generated if empty)" data-testid="mcp-oauth-client-id" />
+															<Input
+																{...field}
+																value={field.value ?? ""}
+																placeholder="your-client-id (auto-generated if empty)"
+																data-testid="mcp-oauth-client-id"
+															/>
 														</FormControl>
 														<p className="text-muted-foreground text-xs">
 															Will be auto-generated via dynamic registration if left empty and provider supports it
@@ -469,7 +481,13 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 													<FormItem>
 														<FormLabel>OAuth Client Secret (optional for PKCE)</FormLabel>
 														<FormControl>
-															<Input {...field} type="password" value={field.value ?? ""} placeholder="your-client-secret" data-testid="mcp-oauth-client-secret" />
+															<Input
+																{...field}
+																type="password"
+																value={field.value ?? ""}
+																placeholder="your-client-secret"
+																data-testid="mcp-oauth-client-secret"
+															/>
 														</FormControl>
 														<p className="text-muted-foreground text-xs">Leave empty for public clients using PKCE</p>
 														<FormMessage />
