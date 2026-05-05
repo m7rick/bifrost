@@ -3837,6 +3837,14 @@ func (bifrost *Bifrost) UpdateMCPClient(id string, updatedConfig *schemas.MCPCli
 	return bifrost.MCPManager.UpdateClient(id, updatedConfig)
 }
 
+// UpdateMCPClientConnection reconnects an existing MCP client using updated headers
+func (bifrost *Bifrost) UpdateMCPClientConnection(id string, newConfig *schemas.MCPClientConfig) error {
+	if bifrost.MCPManager == nil {
+		return fmt.Errorf("mcp is not configured in this bifrost instance")
+	}
+	return bifrost.MCPManager.UpdateClientConnection(id, newConfig)
+}
+
 // ReconnectMCPClient attempts to reconnect an MCP client if it is disconnected.
 //
 // Parameters:
@@ -6037,6 +6045,7 @@ func (bifrost *Bifrost) handleProviderRequest(provider schemas.Provider, config 
 		if bifrostError != nil {
 			return nil, bifrostError
 		}
+		embeddingResponse.BackfillParams(req.BifrostRequest.EmbeddingRequest)
 		response.EmbeddingResponse = embeddingResponse
 	case schemas.RerankRequest:
 		rerankResponse, bifrostError := provider.Rerank(req.Context, key, req.BifrostRequest.RerankRequest)
