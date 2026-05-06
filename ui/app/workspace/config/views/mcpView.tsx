@@ -302,7 +302,12 @@ export default function MCPView() {
 							<label htmlFor="external-client-url" className="text-sm font-medium">
 								{t("workspace.mcpSettings.clientUrl")}
 							</label>
-							<p className="text-muted-foreground text-sm">{t("workspace.mcpSettings.clientUrlDescription")}</p>
+							<p className="text-muted-foreground text-sm">
+								{t("workspace.mcpSettings.clientUrlDescription")}
+							</p>
+							<p className="text-muted-foreground mt-1 text-xs">
+								{t("workspace.mcpSettings.clientUrlWarning")}
+							</p>
 						</div>
 						<EnvVarInput
 							id="external-client-url"

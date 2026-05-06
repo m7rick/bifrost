@@ -18,6 +18,7 @@ export default function ModelProviderConfig({ provider, onRequestDelete }: Props
 	const [showConfigSheet, setShowConfigSheet] = useState(false);
 	const hasGovernanceAccess = useRbac(RbacResource.Governance, RbacOperation.View);
 	const hasDeleteProviderAccess = useRbac(RbacResource.ModelProvider, RbacOperation.Delete);
+	const hasUpdateProviderAccess = useRbac(RbacResource.ModelProvider, RbacOperation.Update);
 
 	const showApiKeys = useMemo(() => {
 		if (provider.custom_provider_config) {
@@ -41,7 +42,7 @@ export default function ModelProviderConfig({ provider, onRequestDelete }: Props
 			)}
 			<Button variant="outline" onClick={() => setShowConfigSheet(true)}>
 				<SettingsIcon className="h-4 w-4" />
-				{t("workspace.providers.editConfig")}
+				{hasUpdateProviderAccess ? t("workspace.providers.editConfig") : t("workspace.providers.viewConfig")}
 			</Button>
 		</div>
 	);

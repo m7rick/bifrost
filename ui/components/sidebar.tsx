@@ -523,7 +523,7 @@ export default function AppSidebar() {
 	const hasBusinessUnitsAccess = useRbac(RbacResource.Governance, RbacOperation.View);
 	const hasRbacAccess = useRbac(RbacResource.RBAC, RbacOperation.View);
 	const hasVirtualKeysAccess = useRbac(RbacResource.VirtualKeys, RbacOperation.View);
-	const hasGovernanceAccess = useRbac(RbacResource.Governance, RbacOperation.View);
+	const hasGovernanceLegacyAccess = useRbac(RbacResource.Governance, RbacOperation.View);
 	const hasRoutingRulesAccess = useRbac(RbacResource.RoutingRules, RbacOperation.View);
 	const hasGuardrailsProvidersAccess = useRbac(RbacResource.GuardrailsProviders, RbacOperation.View);
 	const hasGuardrailsConfigAccess = useRbac(RbacResource.GuardrailsConfig, RbacOperation.View);
@@ -532,6 +532,15 @@ export default function AppSidebar() {
 	const hasSettingsAccess = useRbac(RbacResource.Settings, RbacOperation.View);
 	const hasPromptRepositoryAccess = useRbac(RbacResource.PromptRepository, RbacOperation.View);
 	const hasAccessProfilesAccess = useRbac(RbacResource.AccessProfiles, RbacOperation.View);
+	const hasAnyGovernanceAccess =
+		hasVirtualKeysAccess ||
+		hasTeamsAccess ||
+		hasUsersAccess ||
+		hasCustomersAccess ||
+		hasBusinessUnitsAccess ||
+		hasRbacAccess ||
+		hasAccessProfilesAccess ||
+		hasGovernanceLegacyAccess;
 	const { data: coreConfig } = useGetCoreConfigQuery({});
 	const isDbConnected = coreConfig?.is_db_connected ?? false;
 
@@ -607,7 +616,7 @@ export default function AppSidebar() {
 						url: "/workspace/model-limits",
 						icon: Wallet,
 						description: t("sidebar.desc.modelLimits"),
-						hasAccess: hasGovernanceAccess,
+						hasAccess: hasGovernanceLegacyAccess,
 					},
 					{
 						title: t("sidebar.sub.routingRules"),
@@ -674,7 +683,7 @@ export default function AppSidebar() {
 				url: "/workspace/governance",
 				icon: Landmark,
 				description: t("sidebar.desc.virtualKeysUsersTeams"),
-				hasAccess: hasGovernanceAccess,
+				hasAccess: hasAnyGovernanceAccess,
 				subItems: [
 					{
 						title: t("sidebar.sub.virtualKeys"),
@@ -875,7 +884,8 @@ export default function AppSidebar() {
 			hasBusinessUnitsAccess,
 			hasRbacAccess,
 			hasVirtualKeysAccess,
-			hasGovernanceAccess,
+			hasGovernanceLegacyAccess,
+			hasAnyGovernanceAccess,
 			hasRoutingRulesAccess,
 			hasGuardrailsProvidersAccess,
 			hasGuardrailsConfigAccess,

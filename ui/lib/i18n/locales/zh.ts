@@ -773,6 +773,7 @@ const zh = {
 			},
 		},
 		providers: {
+			viewConfig: "查看提供商配置",
 			configuredProviders: "已配置的提供商",
 			addProvider: "添加提供商",
 			addNewProvider: "添加新提供商",
@@ -946,6 +947,7 @@ const zh = {
 			},
 			keyForm: {
 				noChanges: "未做更改",
+				noPermission: "您没有权限修改提供商密钥",
 				errorUpdating: "更新密钥出错",
 				errorCreating: "创建密钥出错",
 			},
@@ -1930,6 +1932,7 @@ const zh = {
 			searchPlaceholder: "按名称搜索...",
 			name: "名称",
 			connectionType: "连接类型",
+			auth: "认证",
 			codeMode: "代码模式",
 			connectionInfo: "连接信息",
 			enabledTools: "已启用工具",
@@ -1940,6 +1943,8 @@ const zh = {
 			disabled: "已禁用",
 			reconnect: "重新连接",
 			reconnectUnsupported: "不支持对每用户 OAuth 重新连接",
+			reconnectUnsupportedDescription: "重新连接不适用于每用户 OAuth，每个用户需要自行管理认证。",
+			enableBeforeReconnect: "请先启用客户端再重新连接",
 			removeServerTitle: "移除 MCP 服务器",
 			removeServerDescription: "确定要移除「{{name}}」吗？此操作无法撤销。",
 			showing: "显示 {{from}}-{{to}}，共 {{total}}",
@@ -2085,6 +2090,8 @@ const zh = {
 			clientUrl: "客户端 URL",
 			clientUrlDescription:
 				"用作 Bifrost 向 OAuth 提供商注册时的 redirect_uri，当它充当 MCP 服务器的客户端时。例如：当用户连接 Notion 或 Jira 等 MCP 服务器时，这是 Notion/Jira 在登录后重定向浏览器的 URL（<URL>/api/oauth/callback）。",
+			clientUrlWarning:
+				"注意：如果 MCP 客户端已完成 OAuth 认证，更改此设置将导致认证失效。上游提供商会将 redirect_uri 锁定为初始注册的值，因此现有客户端将出现 \"Invalid redirect URI\" 错误。请清除受影响 MCP 服务器的 OAuth 客户端凭据并重新授权，以便 Bifrost 使用新 URL 重新运行动态客户端注册。",
 			saveChanges: "保存更改",
 			saving: "保存中...",
 			maxAgentDepthError: "最大代理深度必须是正数。",

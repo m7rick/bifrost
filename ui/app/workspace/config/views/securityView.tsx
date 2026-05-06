@@ -193,7 +193,6 @@ export default function SecurityView() {
 				<h2 className="text-lg font-semibold tracking-tight">{t("workspace.config.security.title")}</h2>
 				<p className="text-muted-foreground text-sm">{t("workspace.config.security.description")}</p>
 			</div>
-
 			<div className="space-y-4">
 				{authConfig.is_enabled && !authConfig.disable_auth_on_inference && (
 					<Alert variant="default" className="border-blue-20">

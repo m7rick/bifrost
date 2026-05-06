@@ -173,6 +173,7 @@ type ConfigStore interface {
 	GetTeams(ctx context.Context, customerID string) ([]tables.TableTeam, error)
 	GetTeamsPaginated(ctx context.Context, params TeamsQueryParams) ([]tables.TableTeam, int64, error)
 	GetTeam(ctx context.Context, id string) (*tables.TableTeam, error)
+	GetTeamByName(ctx context.Context, name string, customerID string) (*tables.TableTeam, error)
 	CreateTeam(ctx context.Context, team *tables.TableTeam, tx ...*gorm.DB) error
 	UpdateTeam(ctx context.Context, team *tables.TableTeam, tx ...*gorm.DB) error
 	DeleteTeam(ctx context.Context, id string) error
@@ -296,6 +297,7 @@ type ConfigStore interface {
 
 	// OAuth config CRUD
 	GetOauthConfigByID(ctx context.Context, id string) (*tables.TableOauthConfig, error)
+	GetOauthConfigsByIDs(ctx context.Context, ids []string) (map[string]*tables.TableOauthConfig, error)
 	GetOauthConfigByState(ctx context.Context, state string) (*tables.TableOauthConfig, error)
 	GetOauthConfigByTokenID(ctx context.Context, tokenID string) (*tables.TableOauthConfig, error)
 	CreateOauthConfig(ctx context.Context, config *tables.TableOauthConfig) error

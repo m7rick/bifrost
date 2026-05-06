@@ -791,6 +791,7 @@ const en = {
 			},
 		},
 		providers: {
+			viewConfig: "View Provider Config",
 			configuredProviders: "Configured Providers",
 			addProvider: "Add provider",
 			addNewProvider: "Add New Provider",
@@ -970,6 +971,7 @@ const en = {
 			},
 			keyForm: {
 				noChanges: "No changes made",
+				noPermission: "You do not have permission to modify provider keys",
 				errorUpdating: "Error updating key",
 				errorCreating: "Error creating key",
 			},
@@ -1977,6 +1979,7 @@ const en = {
 			searchPlaceholder: "Search by name...",
 			name: "Name",
 			connectionType: "Connection Type",
+			auth: "Auth",
 			codeMode: "Code Mode",
 			connectionInfo: "Connection Info",
 			enabledTools: "Enabled Tools",
@@ -1987,6 +1990,8 @@ const en = {
 			disabled: "Disabled",
 			reconnect: "Reconnect",
 			reconnectUnsupported: "Reconnect not supported for per-user OAuth",
+			reconnectUnsupportedDescription: "Reconnect is not applicable for per-user OAuth, each user manages their own auth.",
+			enableBeforeReconnect: "Enable the client before reconnecting",
 			removeServerTitle: "Remove MCP Server",
 			removeServerDescription: 'Are you sure you want to remove "{{name}}"? This action cannot be undone.',
 			showing: "Showing {{from}}-{{to}} of {{total}}",
@@ -2134,6 +2139,8 @@ const en = {
 			clientUrl: "Client URL",
 			clientUrlDescription:
 				"Used as the redirect_uri Bifrost registers with upstream OAuth providers when it acts as a client to an MCP server. Example: when a user connects an MCP server like Notion or Jira, this is the URL Notion/Jira will redirect the browser to after login (<URL>/api/oauth/callback).",
+			clientUrlWarning:
+				"Heads up: changing this after MCP clients have already completed OAuth will break them. The upstream provider locks the redirect_uri to whatever was registered initially, so existing clients will fail with \"Invalid redirect URI\". Clear the stored OAuth client credentials for affected MCP servers and re-authorize so Bifrost re-runs Dynamic Client Registration with the new URL.",
 			saveChanges: "Save Changes",
 			saving: "Saving...",
 			maxAgentDepthError: "Max agent depth must be a positive number.",

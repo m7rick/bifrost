@@ -3,6 +3,7 @@
  * Create/Edit form for routing rules
  */
 
+import { RbacOperation, RbacResource, useRbac } from "@enterprise/lib";
 import { Button } from "@/components/ui/button";
 import { ComboboxSelect } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
@@ -89,6 +90,9 @@ export function RoutingRuleSheet({ open, onOpenChange, editingRule, onSuccess }:
 
 	const isEditing = !!editingRule;
 	const isLoading = isCreating || isUpdating;
+	const canCreate = useRbac(RbacResource.RoutingRules, RbacOperation.Create);
+	const canUpdate = useRbac(RbacResource.RoutingRules, RbacOperation.Update);
+	const hasRequiredAccess = isEditing ? canUpdate : canCreate;
 	const enabled = watch("enabled");
 	const chainRule = watch("chain_rule");
 	const scope = watch("scope");
@@ -597,7 +601,7 @@ export function RoutingRuleSheet({ open, onOpenChange, editingRule, onSuccess }:
 							<X className="h-4 w-4" />
 							{i18n.t("workspace.routingRules.cancel")}
 						</Button>
-						<Button type="submit" disabled={isLoading}>
+						<Button type="submit" disabled={isLoading || !hasRequiredAccess}>
 							<Save className="h-4 w-4" />
 							{isEditing ? i18n.t("workspace.routingRules.updateRule") : i18n.t("workspace.routingRules.saveRule")}
 						</Button>

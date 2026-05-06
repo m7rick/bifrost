@@ -162,7 +162,6 @@ func (s *RDBConfigStore) UpdateClientConfig(ctx context.Context, config *ClientC
 		EnforceAuthOnInference:                config.EnforceAuthOnInference,
 		EnforceGovernanceHeader:               config.EnforceGovernanceHeader,
 		EnforceSCIMAuth:                       config.EnforceSCIMAuth,
-		AllowDirectKeys:                       config.AllowDirectKeys,
 		PrometheusLabels:                      config.PrometheusLabels,
 		AllowedOrigins:                        config.AllowedOrigins,
 		AllowedHeaders:                        config.AllowedHeaders,
@@ -375,7 +374,6 @@ func (s *RDBConfigStore) GetClientConfig(ctx context.Context) (*ClientConfig, er
 		EnforceAuthOnInference:  dbConfig.EnforceAuthOnInference,
 		EnforceGovernanceHeader: dbConfig.EnforceGovernanceHeader,
 		EnforceSCIMAuth:         dbConfig.EnforceSCIMAuth,
-		AllowDirectKeys:         dbConfig.AllowDirectKeys,
 		AllowedOrigins:          dbConfig.AllowedOrigins,
 		AllowedHeaders:          dbConfig.AllowedHeaders,
 		MaxRequestBodySizeMB:    dbConfig.MaxRequestBodySizeMB,
@@ -2833,6 +2831,26 @@ func (s *RDBConfigStore) GetTeam(ctx context.Context, id string) (*tables.TableT
 	return &team, nil
 }
 
+// GetTeamByName retrieves a team by name. When customerID is non-empty the lookup is scoped to that customer
+func (s *RDBConfigStore) GetTeamByName(ctx context.Context, name string, customerID string) (*tables.TableTeam, error) {
+	var team tables.TableTeam
+	q := s.DB().WithContext(ctx).
+		Select(teamSelectWithVKCount).
+		Preload("Customer").Preload("Budgets").Preload("RateLimit").
+		Where("name = ?", name)
+	if customerID != "" {
+		q = q.Where("customer_id = ?", customerID)
+	}
+
+	if err := q.First(&team).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &team, nil
+}
+
 // CreateTeam creates a new team in the database.
 func (s *RDBConfigStore) CreateTeam(ctx context.Context, team *tables.TableTeam, tx ...*gorm.DB) error {
 	var txDB *gorm.DB
@@ -4149,6 +4167,23 @@ func (s *RDBConfigStore) GetOauthConfigByID(ctx context.Context, id string) (*ta
 		return nil, fmt.Errorf("failed to get oauth config: %w", result.Error)
 	}
 	return &config, nil
+}
+
+// GetOauthConfigsByIDs retrieves multiple OAuth configs by their IDs in a single query.
+// Returns a map keyed by config ID for O(1) lookup.
+func (s *RDBConfigStore) GetOauthConfigsByIDs(ctx context.Context, ids []string) (map[string]*tables.TableOauthConfig, error) {
+	if len(ids) == 0 {
+		return map[string]*tables.TableOauthConfig{}, nil
+	}
+	var configs []tables.TableOauthConfig
+	if err := s.DB().WithContext(ctx).Where("id IN ?", ids).Find(&configs).Error; err != nil {
+		return nil, fmt.Errorf("failed to batch-get oauth configs: %w", err)
+	}
+	result := make(map[string]*tables.TableOauthConfig, len(configs))
+	for i := range configs {
+		result[configs[i].ID] = &configs[i]
+	}
+	return result, nil
 }
 
 // GetOauthConfigByState retrieves an OAuth config by its state token

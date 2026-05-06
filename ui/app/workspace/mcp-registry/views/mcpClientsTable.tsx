@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { MCP_STATUS_COLORS } from "@/lib/constants/config";
 import { getErrorMessage, useDeleteMCPClientMutation, useReconnectMCPClientMutation } from "@/lib/store";
@@ -129,6 +130,23 @@ export default function MCPClientsTable({
 		}
 	};
 
+	const getAuthTypeDisplay = (type: string | undefined) => {
+		switch (type) {
+			case "none":
+			case undefined:
+			case "":
+				return "None";
+			case "headers":
+				return "Headers";
+			case "oauth":
+				return "OAuth";
+			case "per_user_oauth":
+				return "Per-user OAuth";
+			default:
+				return type;
+		}
+	};
+
 	const handleRowClick = (mcpClient: MCPClient) => {
 		setSelectedMCPClient(mcpClient);
 		setShowDetailSheet(true);
@@ -203,6 +221,7 @@ export default function MCPClientsTable({
 						<TableRow className="bg-muted/50">
 							<TableHead className="font-semibold">{t("workspace.mcp.name")}</TableHead>
 							<TableHead className="font-semibold">{t("workspace.mcp.connectionType")}</TableHead>
+							<TableHead className="font-semibold">{t("workspace.mcp.auth")}</TableHead>
 							<TableHead className="font-semibold">{t("workspace.mcp.codeMode")}</TableHead>
 							<TableHead className="font-semibold">{t("workspace.mcp.connectionInfo")}</TableHead>
 							<TableHead className="font-semibold">{t("workspace.mcp.enabledTools")}</TableHead>
@@ -215,7 +234,7 @@ export default function MCPClientsTable({
 					<TableBody>
 						{mcpClients.length === 0 ? (
 							<TableRow>
-								<TableCell colSpan={9} className="h-24 text-center">
+								<TableCell colSpan={10} className="h-24 text-center">
 									<span className="text-muted-foreground text-sm">{t("workspace.mcp.noMatchingServers")}</span>
 								</TableCell>
 							</TableRow>
@@ -242,6 +261,7 @@ export default function MCPClientsTable({
 									>
 										<TableCell className="font-medium">{c.config.name}</TableCell>
 										<TableCell data-testid="mcp-client-connection-type">{getConnectionTypeDisplay(c.config.connection_type)}</TableCell>
+										<TableCell data-testid="mcp-client-auth-type">{getAuthTypeDisplay(c.config.auth_type)}</TableCell>
 										<TableCell>
 											<Badge
 												className={
@@ -281,26 +301,47 @@ export default function MCPClientsTable({
 											<Badge variant={c.config.disabled ? "secondary" : "default"}>{c.config.disabled ? "Disabled" : "Enabled"}</Badge>
 										</TableCell>
 										<TableCell className="space-x-2 text-right" onClick={(e) => e.stopPropagation()}>
-											<span title={isPerUserOAuth ? t("workspace.mcp.reconnectUnsupported") : t("workspace.mcp.reconnect")}>
-												<Button
-													variant="ghost"
-													size="icon"
-													aria-label={isPerUserOAuth ? t("workspace.mcp.reconnectUnsupported") : t("workspace.mcp.reconnect")}
-													onClick={() => handleReconnect(c)}
-													disabled={
-														isPerUserOAuth ||
-														c.config.disabled ||
-														reconnectingClients.includes(c.config.client_id) ||
-														!hasUpdateMCPClientAccess
-													}
-												>
-													{reconnectingClients.includes(c.config.client_id) ? (
-														<Loader2 className="h-4 w-4 animate-spin" />
-													) : (
-														<RefreshCcw className="h-4 w-4" />
-													)}
-												</Button>
-											</span>
+											<TooltipProvider>
+												<Tooltip>
+													{/* The wrapping <span> is required: Radix Tooltip (and native title) don't fire on disabled buttons because the browser swallows pointer events. The span receives them and forwards to the tooltip. */}
+													<TooltipTrigger asChild>
+														<span className="inline-flex">
+															<Button
+																variant="ghost"
+																size="icon"
+																aria-label={
+																	isPerUserOAuth
+																		? t("workspace.mcp.reconnectUnsupported")
+																		: c.config.disabled
+																			? t("workspace.mcp.enableBeforeReconnect")
+																			: t("workspace.mcp.reconnect")
+																}
+																onClick={() => handleReconnect(c)}
+																disabled={
+																	isPerUserOAuth ||
+																	c.config.disabled ||
+																	reconnectingClients.includes(c.config.client_id) ||
+																	!hasUpdateMCPClientAccess
+																}
+																className={isPerUserOAuth || c.config.disabled ? "pointer-events-none" : undefined}
+															>
+																{reconnectingClients.includes(c.config.client_id) ? (
+																	<Loader2 className="h-4 w-4 animate-spin" />
+																) : (
+																	<RefreshCcw className="h-4 w-4" />
+																)}
+															</Button>
+														</span>
+													</TooltipTrigger>
+													<TooltipContent>
+														{isPerUserOAuth
+															? t("workspace.mcp.reconnectUnsupportedDescription")
+															: c.config.disabled
+																? t("workspace.mcp.enableBeforeReconnect")
+																: t("workspace.mcp.reconnect")}
+													</TooltipContent>
+												</Tooltip>
+											</TooltipProvider>
 
 											<AlertDialog>
 												<AlertDialogTrigger asChild>
