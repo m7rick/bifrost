@@ -414,7 +414,7 @@ func TestTableVirtualKey_EncryptDecrypt(t *testing.T) {
 		ID:       "vk-1",
 		Name:     "test-vk",
 		Value:    "vk-secret-value-xyz",
-		IsActive: true,
+		IsActive: bifrost.Ptr(true),
 	}
 
 	require.NoError(t, db.Create(vk).Error)
@@ -440,7 +440,7 @@ func TestTableVirtualKey_HashComputedBeforeEncryption(t *testing.T) {
 		ID:       "vk-hash",
 		Name:     "hash-test",
 		Value:    "plaintext-value",
-		IsActive: true,
+		IsActive: bifrost.Ptr(true),
 	}
 
 	require.NoError(t, db.Create(vk).Error)
@@ -538,7 +538,7 @@ func TestTableOauthConfig_EmptySecret_NoError(t *testing.T) {
 
 	var found TableOauthConfig
 	require.NoError(t, db.First(&found, "id = ?", "oauth-cfg-empty").Error)
-	assert.Equal(t, "", found.ClientSecret)
+	assert.Equal(t, "", found.ClientSecret.GetValue())
 	assert.Equal(t, "", found.CodeVerifier)
 }
 
@@ -898,7 +898,7 @@ func TestTableVirtualKey_UpdatePreservesDecryption(t *testing.T) {
 		ID:       "vk-update",
 		Name:     "update-vk",
 		Value:    "original-vk-value",
-		IsActive: true,
+		IsActive: bifrost.Ptr(true),
 	}
 	require.NoError(t, db.Create(vk).Error)
 
@@ -1325,7 +1325,7 @@ func TestTableVirtualKey_EncryptionDisabled_StoresPlaintext(t *testing.T) {
 		ID:       "vk-dis-1",
 		Name:     "disabled-vk",
 		Value:    "vk-plaintext-value",
-		IsActive: true,
+		IsActive: bifrost.Ptr(true),
 	}
 
 	require.NoError(t, db.Create(vk).Error)

@@ -411,6 +411,26 @@ func (s *RDBConfigStore) UpdateProvidersConfig(ctx context.Context, providers ma
 	} else {
 		txDB = s.DB()
 	}
+	// Pre-fetch governance FK references for all existing providers in one query.
+	// ProviderConfig carries no governance fields, so without this the upsert
+	// below would write NULL into budget_id/rate_limit_id on every startup.
+	// If the columns don't exist yet, the fetch simply returns nothing
+	governanceFKs := make(map[string]tables.TableProvider)
+	var existingProviders []tables.TableProvider
+	providerTableName := tables.TableProvider{}.TableName()
+
+	if s.doesColumnExist(ctx, providerTableName, "budget_id") &&
+		s.doesColumnExist(ctx, providerTableName, "rate_limit_id") {
+		if err := txDB.WithContext(ctx).
+			Select("name", "budget_id", "rate_limit_id").
+			Find(&existingProviders).Error; err != nil {
+			return fmt.Errorf("failed to prefetch provider governance fks: %w", err)
+		}
+		for _, p := range existingProviders {
+			governanceFKs[p.Name] = p
+		}
+	}
+
 	for providerName, providerConfig := range providers {
 		dbProvider := tables.TableProvider{
 			Name:                     string(providerName),
@@ -427,7 +447,15 @@ func (s *RDBConfigStore) UpdateProvidersConfig(ctx context.Context, providers ma
 			Description:              providerConfig.Description,
 		}
 
-		// Upsert provider (create or update if exists)
+		// Carry over governance FKs from the existing row so UpdateAll never
+		// overwrites them with NULL. New providers (not in governanceFKs) correctly
+		// start with nil governance — governance is never set via the file sync path.
+		if existing, ok := governanceFKs[string(providerName)]; ok {
+			dbProvider.BudgetID = existing.BudgetID
+			dbProvider.RateLimitID = existing.RateLimitID
+		}
+
+		// Upsert provider (create or update if exists).
 		if err := txDB.WithContext(ctx).Clauses(
 			clause.OnConflict{
 				Columns:   []clause.Column{{Name: "name"}},
@@ -2376,10 +2404,16 @@ func (s *RDBConfigStore) GetAllRedactedKeys(ctx context.Context, ids []string) (
 }
 
 // DeleteVirtualKey deletes a virtual key from the database.
-func (s *RDBConfigStore) DeleteVirtualKey(ctx context.Context, id string) error {
-	if err := s.DB().WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+func (s *RDBConfigStore) DeleteVirtualKey(ctx context.Context, id string, tx ...*gorm.DB) error {
+	var txDB *gorm.DB
+	if len(tx) > 0 {
+		txDB = tx[0]
+	} else {
+		txDB = s.DB()
+	}
+	if err := txDB.WithContext(ctx).Transaction(func(txDB *gorm.DB) error {
 		var virtualKey tables.TableVirtualKey
-		if err := tx.WithContext(ctx).Preload("ProviderConfigs").First(&virtualKey, "id = ?", id).Error; err != nil {
+		if err := txDB.WithContext(ctx).Preload("ProviderConfigs").First(&virtualKey, "id = ?", id).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return ErrNotFound
 			}
@@ -2390,11 +2424,11 @@ func (s *RDBConfigStore) DeleteVirtualKey(ctx context.Context, id string) error 
 		var providerConfigRateLimitIDs []string
 		for _, pc := range virtualKey.ProviderConfigs {
 			// Delete the keys join table entries
-			if err := tx.WithContext(ctx).Exec("DELETE FROM governance_virtual_key_provider_config_keys WHERE table_virtual_key_provider_config_id = ?", pc.ID).Error; err != nil {
+			if err := txDB.WithContext(ctx).Exec("DELETE FROM governance_virtual_key_provider_config_keys WHERE table_virtual_key_provider_config_id = ?", pc.ID).Error; err != nil {
 				return err
 			}
 			// Delete budgets owned by this provider config
-			if err := tx.WithContext(ctx).Where("provider_config_id = ?", pc.ID).Delete(&tables.TableBudget{}).Error; err != nil {
+			if err := txDB.WithContext(ctx).Where("provider_config_id = ?", pc.ID).Delete(&tables.TableBudget{}).Error; err != nil {
 				return err
 			}
 			if pc.RateLimitID != nil {
@@ -2403,41 +2437,41 @@ func (s *RDBConfigStore) DeleteVirtualKey(ctx context.Context, id string) error 
 		}
 
 		// Delete all provider configs associated with the virtual key
-		if err := tx.WithContext(ctx).Delete(&tables.TableVirtualKeyProviderConfig{}, "virtual_key_id = ?", id).Error; err != nil {
+		if err := txDB.WithContext(ctx).Delete(&tables.TableVirtualKeyProviderConfig{}, "virtual_key_id = ?", id).Error; err != nil {
 			return err
 		}
 		for _, rateLimitID := range providerConfigRateLimitIDs {
-			if err := tx.WithContext(ctx).Delete(&tables.TableRateLimit{}, "id = ?", rateLimitID).Error; err != nil {
+			if err := txDB.WithContext(ctx).Delete(&tables.TableRateLimit{}, "id = ?", rateLimitID).Error; err != nil {
 				return err
 			}
 		}
 		// Delete all MCP configs associated with the virtual key
-		if err := tx.WithContext(ctx).Delete(&tables.TableVirtualKeyMCPConfig{}, "virtual_key_id = ?", id).Error; err != nil {
+		if err := txDB.WithContext(ctx).Delete(&tables.TableVirtualKeyMCPConfig{}, "virtual_key_id = ?", id).Error; err != nil {
 			return err
 		}
 		// Delete per-user OAuth pending flows tied to this VK
-		if err := tx.WithContext(ctx).Where("virtual_key_id = ?", id).Delete(&tables.TablePerUserOAuthPendingFlow{}).Error; err != nil {
+		if err := txDB.WithContext(ctx).Where("virtual_key_id = ?", id).Delete(&tables.TablePerUserOAuthPendingFlow{}).Error; err != nil {
 			return err
 		}
 		// Delete per-user OAuth sessions tied to this VK
-		if err := tx.WithContext(ctx).Where("virtual_key_id = ?", id).Delete(&tables.TablePerUserOAuthSession{}).Error; err != nil {
+		if err := txDB.WithContext(ctx).Where("virtual_key_id = ?", id).Delete(&tables.TablePerUserOAuthSession{}).Error; err != nil {
 			return err
 		}
 		// Delete upstream OAuth user sessions tied to this VK
-		if err := tx.WithContext(ctx).Where("virtual_key_id = ?", id).Delete(&tables.TableOauthUserSession{}).Error; err != nil {
+		if err := txDB.WithContext(ctx).Where("virtual_key_id = ?", id).Delete(&tables.TableOauthUserSession{}).Error; err != nil {
 			return err
 		}
 		// Delete upstream OAuth user tokens tied to this VK
-		if err := tx.WithContext(ctx).Where("virtual_key_id = ?", id).Delete(&tables.TableOauthUserToken{}).Error; err != nil {
+		if err := txDB.WithContext(ctx).Where("virtual_key_id = ?", id).Delete(&tables.TableOauthUserToken{}).Error; err != nil {
 			return err
 		}
 		// Delete budgets owned by this virtual key
-		if err := tx.WithContext(ctx).Where("virtual_key_id = ?", id).Delete(&tables.TableBudget{}).Error; err != nil {
+		if err := txDB.WithContext(ctx).Where("virtual_key_id = ?", id).Delete(&tables.TableBudget{}).Error; err != nil {
 			return err
 		}
 		rateLimitID := virtualKey.RateLimitID
 		// Delete the virtual key
-		if err := tx.WithContext(ctx).Delete(&tables.TableVirtualKey{}, "id = ?", id).Error; err != nil {
+		if err := txDB.WithContext(ctx).Delete(&tables.TableVirtualKey{}, "id = ?", id).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return ErrNotFound
 			}
@@ -2445,7 +2479,7 @@ func (s *RDBConfigStore) DeleteVirtualKey(ctx context.Context, id string) error 
 		}
 		// Delete the rate limit associated with the virtual key
 		if rateLimitID != nil {
-			if err := tx.WithContext(ctx).Delete(&tables.TableRateLimit{}, "id = ?", *rateLimitID).Error; err != nil {
+			if err := txDB.WithContext(ctx).Delete(&tables.TableRateLimit{}, "id = ?", *rateLimitID).Error; err != nil {
 				return err
 			}
 		}
@@ -4007,6 +4041,10 @@ func (s *RDBConfigStore) RetryOnNotFound(ctx context.Context, fn func(ctx contex
 // doesTableExist checks if a table exists in the database.
 func (s *RDBConfigStore) doesTableExist(ctx context.Context, tableName string) bool {
 	return s.DB().WithContext(ctx).Migrator().HasTable(tableName)
+}
+
+func (s *RDBConfigStore) doesColumnExist(ctx context.Context, tableName, columnName string) bool {
+	return s.DB().WithContext(ctx).Migrator().HasColumn(tableName, columnName)
 }
 
 // removeNullKeys removes null keys from the database.
