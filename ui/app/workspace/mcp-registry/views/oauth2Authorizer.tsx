@@ -26,7 +26,9 @@ export const OAuth2Authorizer: React.FC<OAuth2AuthorizerProps> = ({
 	oauthConfigId,
 	isPerUserOauth,
 }) => {
-	const [status, setStatus] = useState<"confirm" | "pending" | "polling" | "success" | "failed">(isPerUserOauth ? "confirm" : "pending");
+	const [status, setStatus] = useState<"confirm" | "pending" | "blocked" | "polling" | "success" | "failed">(
+		isPerUserOauth ? "confirm" : "pending",
+	);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const popupRef = useRef<Window | null>(null);
 	const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -66,9 +68,6 @@ export const OAuth2Authorizer: React.FC<OAuth2AuthorizerProps> = ({
 			if (cancelledRef.current) return;
 			setStatus("success");
 			onSuccess();
-			setTimeout(() => {
-				if (!cancelledRef.current) onClose();
-			}, 1000);
 		} catch (error) {
 			if (cancelledRef.current) return;
 			const errMsg = getErrorMessage(error);
@@ -76,7 +75,7 @@ export const OAuth2Authorizer: React.FC<OAuth2AuthorizerProps> = ({
 			setErrorMessage(errMsg);
 			onError(errMsg);
 		}
-	}, [oauthConfigId, completeOAuth, onSuccess, onClose, onError]);
+	}, [oauthConfigId, completeOAuth, onSuccess, onError]);
 
 	// Handle OAuth failure
 	const handleOAuthFailed = useCallback(
@@ -141,7 +140,7 @@ export const OAuth2Authorizer: React.FC<OAuth2AuthorizerProps> = ({
 
 			await checkOAuthStatus();
 		}, 2000); // Poll every 2 seconds
-	}, [checkOAuthStatus, handleOAuthFailed]);
+	}, [checkOAuthStatus, getOAuthStatus, handleOAuthComplete, handleOAuthFailed, oauthConfigId, stopPolling]);
 
 	// Open popup and start polling
 	const openPopup = useCallback(() => {
@@ -160,12 +159,19 @@ export const OAuth2Authorizer: React.FC<OAuth2AuthorizerProps> = ({
 		const left = window.screen.width / 2 - width / 2;
 		const top = window.screen.height / 2 - height / 2;
 
-		popupRef.current = window.open(
+		const popup = window.open(
 			authorizeUrl,
 			"oauth_popup",
 			`width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`,
 		);
 
+		if (!popup || popup.closed) {
+			popupRef.current = null;
+			setStatus("blocked");
+			return;
+		}
+
+		popupRef.current = popup;
 		setStatus("polling");
 
 		// Start polling OAuth status
@@ -190,16 +196,8 @@ export const OAuth2Authorizer: React.FC<OAuth2AuthorizerProps> = ({
 		};
 	}, [checkOAuthStatus]);
 
-	// Open popup when dialog opens (skip if waiting for user confirmation)
-	useEffect(() => {
-		if (open && status === "pending") {
-			openPopup();
-		}
-	}, [open, status, openPopup]);
-
 	// Handle user confirming per-user OAuth test
 	const handleConfirmPerUserOAuth = () => {
-		setStatus("pending");
 		openPopup();
 	};
 
@@ -219,7 +217,6 @@ export const OAuth2Authorizer: React.FC<OAuth2AuthorizerProps> = ({
 		if (isPerUserOauth) {
 			setStatus("confirm");
 		} else {
-			setStatus("pending");
 			openPopup();
 		}
 	};
@@ -261,6 +258,7 @@ export const OAuth2Authorizer: React.FC<OAuth2AuthorizerProps> = ({
 					<DialogDescription>
 						{status === "confirm" && i18n.t("workspace.oauth.oneTimeLoginNeeded")}
 						{status === "pending" && i18n.t("workspace.oauth.openingAuthorizationWindow")}
+						{status === "blocked" && i18n.t("workspace.oauth.authorizationWindowBlocked")}
 						{status === "polling" && i18n.t("workspace.oauth.waitingForAuthorization")}
 						{status === "success" && i18n.t("workspace.oauth.authorizationSuccessful")}
 						{status === "failed" && i18n.t("workspace.oauth.authorizationFailed")}
@@ -285,6 +283,22 @@ export const OAuth2Authorizer: React.FC<OAuth2AuthorizerProps> = ({
 							</div>
 						</>
 					)}
+
+				{(status === "pending" || status === "blocked") && (
+					<>
+						<p className="text-muted-foreground text-sm">
+							{status === "blocked"
+								? "Your browser blocked the authorization window. Open it manually to continue."
+								: "Open the authorization window to sign in and complete the connection."}
+						</p>
+						<div className="flex w-full justify-end space-x-2">
+							<Button onClick={handleCancel} variant="outline" data-testid="oauth-pending-cancel-btn">
+								Cancel
+							</Button>
+							<Button onClick={openPopup} data-testid="oauth-open-window-btn">Open Authorization Window</Button>
+						</div>
+					</>
+				)}
 
 					{status === "polling" && (
 						<>

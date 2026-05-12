@@ -60,8 +60,8 @@ interface VirtualKeySheetProps {
 	virtualKey?: VirtualKey | null;
 	teams: Team[];
 	customers: Customer[];
-	// When set and not editing, the new VK is created owned by this team and the sheet locks
-	// all fields except name/description (same treatment as access-profile-managed keys).
+	// When set, the new VK is created under this team. The entity assignment is pre-set
+	// and cannot be changed (but all other fields remain editable).
 	defaultTeamId?: string;
 	onSave: () => void;
 	onCancel: () => void;
@@ -168,12 +168,11 @@ export default function VirtualKeySheet({ virtualKey, teams, customers, defaultT
 	// of assignees — directly-attached users don't imply an access-profile relation.
 	const { assignedUsers, isManagedByProfile: isManagedByProfileHook } = useVirtualKeyUsage(virtualKey);
 	const isManagedByProfile = isEditing && isManagedByProfileHook;
-	// Team attachment: when a VK already belongs to a team (edit) or will be created for one
-	// (create from team detail sheet via defaultTeamId), the team assignment is fixed — users
-	// can still edit providers/budgets/rate limits/MCP, but not reparent the VK.
+	// Team attachment: when creating from a team context (defaultTeamId provided), the entity
+	// assignment is pre-set and locked. When editing an existing VK the assignment can be changed.
 	const attachedTeamId = isEditing ? virtualKey?.team_id || "" : defaultTeamId || "";
 	const attachedTeam = attachedTeamId ? teams.find((t) => t.id === attachedTeamId) : undefined;
-	const isTeamLocked = !!attachedTeamId;
+	const isTeamLocked = !isEditing && !!defaultTeamId;
 
 	const handleClose = () => {
 		setIsOpen(false);
@@ -361,6 +360,8 @@ export default function VirtualKeySheet({ virtualKey, teams, customers, defaultT
 	};
 
 	const [showCalendarAlignWarning, setShowCalendarAlignWarning] = useState(false);
+	const [showReassignTeamWarning, setShowReassignTeamWarning] = useState(false);
+	const [pendingTeamId, setPendingTeamId] = useState<string | null>(null);
 
 	const handleCalendarAlignedChange = (checked: boolean) => {
 		if (checked && isEditing) {
@@ -1314,6 +1315,44 @@ export default function VirtualKeySheet({ virtualKey, teams, customers, defaultT
 											</AlertDialogFooter>
 										</AlertDialogContent>
 									</AlertDialog>
+
+									{/* Reassign team confirmation dialog */}
+									<AlertDialog
+										open={showReassignTeamWarning}
+										onOpenChange={(open) => {
+											setShowReassignTeamWarning(open);
+											if (!open) {
+												setPendingTeamId(null);
+											}
+										}}
+									>
+										<AlertDialogContent>
+											<AlertDialogHeader>
+												<AlertDialogTitle>Reassign to a different team?</AlertDialogTitle>
+												<AlertDialogDescription>
+													This key is currently assigned to another team. Reassigning it will move budget tracking to this
+													team — future requests through this key will count against this team’s budget, not the previous one.
+												</AlertDialogDescription>
+											</AlertDialogHeader>
+											<AlertDialogFooter>
+												<AlertDialogCancel data-testid="virtual-key-reassign-cancel" onClick={() => setPendingTeamId(null)}>
+													Cancel
+												</AlertDialogCancel>
+												<AlertDialogAction
+													data-testid="virtual-key-reassign-confirm"
+													onClick={() => {
+														if (pendingTeamId !== null) {
+															form.setValue("teamId", pendingTeamId, { shouldDirty: true });
+														}
+														setPendingTeamId(null);
+														setShowReassignTeamWarning(false);
+													}}
+												>
+													Reassign
+												</AlertDialogAction>
+											</AlertDialogFooter>
+										</AlertDialogContent>
+									</AlertDialog>
 								</div>
 								{/* Rate Limiting Configuration */}
 								<div className="space-y-4">
@@ -1438,11 +1477,19 @@ export default function VirtualKeySheet({ virtualKey, teams, customers, defaultT
 																	options={teams.map((team) => ({
 																		value: team.id,
 																		label: team.customer ? `${team.name} — ${team.customer.name}` : team.name,
-																	}))}
-																	value={field.value || null}
-																	onValueChange={(val) => field.onChange(val ?? "")}
-																	placeholder={i18n.t("workspace.virtualKeys.selectTeamPlaceholder")}
-																	disabled={isTeamLocked}
+															}))}
+															value={field.value || null}
+															onValueChange={(val) => {
+																const newVal = val ?? "";
+																if (isEditing && virtualKey?.team_id && newVal && newVal !== virtualKey.team_id) {
+																			setPendingTeamId(newVal);
+																			setShowReassignTeamWarning(true);
+																		} else {
+																	field.onChange(newVal);
+																}
+															}}
+															placeholder={i18n.t("workspace.virtualKeys.selectTeamPlaceholder")}
+															disabled={isTeamLocked}
 																	emptyMessage={i18n.t("workspace.virtualKeys.noTeamsFound")}
 																	className="h-9"
 																/>
