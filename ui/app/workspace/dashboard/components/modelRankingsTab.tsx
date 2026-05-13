@@ -261,7 +261,7 @@ function TopModelsChart({
 						</ResponsiveContainer>
 					</ChartErrorBoundary>
 				) : (
-					<div className="text-muted-foreground flex h-full items-center justify-center text-sm">No data available</div>
+					<div className="text-muted-foreground flex h-full items-center justify-center text-sm">{t("common.noDataAvailable")}</div>
 				)}
 			</div>
 			<div className="py-2">

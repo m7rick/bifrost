@@ -160,7 +160,7 @@ export default function ObservabilityView() {
 									)}
 									{tab.disabled && (
 										<Badge variant="secondary" className="text-muted-foreground ml-auto text-[10px] font-medium">
-											{"Coming soon".toUpperCase()}
+											{t("workspace.observability.comingSoon").toUpperCase()}
 										</Badge>
 									)}
 								</button>
