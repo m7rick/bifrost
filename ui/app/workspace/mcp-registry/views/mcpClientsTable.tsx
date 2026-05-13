@@ -107,7 +107,7 @@ export default function MCPClientsTable({
 
 	const getConnectionDisplay = (client: MCPClient) => {
 		if (client.config.connection_type === "stdio") {
-			return `${client.config.stdio_config?.command} ${client.config.stdio_config?.args.join(" ")}` || "STDIO";
+			return `${client.config.stdio_config?.command} ${client.config.stdio_config?.args.join(" ")}` || t("workspace.mcp.connectionTypeLabels.stdio");
 		}
 		// connection_string is now an EnvVar, display the value or env_var reference
 		const connStr = client.config.connection_string;
@@ -120,11 +120,11 @@ export default function MCPClientsTable({
 	const getConnectionTypeDisplay = (type: string) => {
 		switch (type) {
 			case "http":
-				return "HTTP";
+				return t("workspace.mcp.connectionTypeLabels.http");
 			case "sse":
-				return "SSE";
+				return t("workspace.mcp.connectionTypeLabels.sse");
 			case "stdio":
-				return "STDIO";
+				return t("workspace.mcp.connectionTypeLabels.stdio");
 			default:
 				return type.toUpperCase();
 		}
@@ -135,13 +135,13 @@ export default function MCPClientsTable({
 			case "none":
 			case undefined:
 			case "":
-				return "None";
+				return t("workspace.mcp.authTypeLabels.none");
 			case "headers":
-				return "Headers";
+				return t("workspace.mcp.authTypeLabels.headers");
 			case "oauth":
-				return "OAuth";
+				return t("workspace.mcp.authTypeLabels.oauth");
 			case "per_user_oauth":
-				return "Per-user OAuth";
+				return t("workspace.mcp.authTypeLabels.perUserOauth");
 			default:
 				return type;
 		}
@@ -271,7 +271,7 @@ export default function MCPClientsTable({
 												{c.state == "connected" ? (
 													<>{c.config.is_code_mode_client ? t("workspace.mcp.enabled") : t("workspace.mcp.disabled")}</>
 												) : (
-													"-"
+													t("workspace.mcp.notAvailable")
 												)}
 											</Badge>
 										</TableCell>
@@ -282,7 +282,7 @@ export default function MCPClientsTable({
 													{enabledToolsCount}/{c.tools?.length}
 												</>
 											) : (
-												"-"
+												t("workspace.mcp.notAvailable")
 											)}
 										</TableCell>
 										<TableCell>
@@ -291,14 +291,16 @@ export default function MCPClientsTable({
 													{autoExecuteToolsCount}/{c.tools?.length}
 												</>
 											) : (
-												"-"
+												t("workspace.mcp.notAvailable")
 											)}
 										</TableCell>
 										<TableCell>
 											<Badge className={MCP_STATUS_COLORS[c.state]}>{c.state}</Badge>
 										</TableCell>
 										<TableCell>
-											<Badge variant={c.config.disabled ? "secondary" : "default"}>{c.config.disabled ? "Disabled" : "Enabled"}</Badge>
+										<Badge variant={c.config.disabled ? "secondary" : "default"}>
+											{c.config.disabled ? t("workspace.mcp.disabled") : t("workspace.mcp.enabled")}
+										</Badge>
 										</TableCell>
 										<TableCell className="space-x-2 text-right" onClick={(e) => e.stopPropagation()}>
 											<TooltipProvider>

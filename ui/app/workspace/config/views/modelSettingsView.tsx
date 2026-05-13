@@ -110,7 +110,7 @@ export default function ModelSettingsView() {
 						<Input
 							id="pricing-datasheet-url"
 							type="text"
-							placeholder="https://example.com/pricing.json"
+							placeholder={t("workspace.customPricing.modelSettings.pricingDatasheetUrlPlaceholder")}
 							data-testid="pricing-datasheet-url-input"
 							{...register("pricing_datasheet_url", {
 								pattern: {

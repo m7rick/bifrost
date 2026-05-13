@@ -130,7 +130,7 @@ export function ProxyFormFragment({ provider }: ProxyFormFragmentProps) {
 											<FormLabel>{t("workspace.providers.proxyUrl")}</FormLabel>
 											<FormControl>
 												<EnvVarInput
-													placeholder="http://proxy.example.com or env.OPENAI_PROXY_URL"
+													placeholder={t("workspace.providers.proxyUrlPlaceholder")}
 													{...field}
 													value={field.value}
 													disabled={!hasUpdateProviderAccess}
@@ -193,7 +193,7 @@ export function ProxyFormFragment({ provider }: ProxyFormFragmentProps) {
 											<FormControl>
 												<EnvVarInput
 													variant="textarea"
-													placeholder="-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE----- or env.OPENAI_PROXY_CA_CERT_PEM"
+													placeholder={t("workspace.providers.proxyCaCertificatePlaceholder")}
 													className="font-mono text-xs"
 													rows={6}
 													hideValueWhenEnv

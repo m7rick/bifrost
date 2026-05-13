@@ -288,14 +288,16 @@ export const OAuth2Authorizer: React.FC<OAuth2AuthorizerProps> = ({
 					<>
 						<p className="text-muted-foreground text-sm">
 							{status === "blocked"
-								? "Your browser blocked the authorization window. Open it manually to continue."
-								: "Open the authorization window to sign in and complete the connection."}
+								? i18n.t("workspace.oauth.authorizationWindowBlockedDescription")
+								: i18n.t("workspace.oauth.openAuthorizationWindowDescription")}
 						</p>
 						<div className="flex w-full justify-end space-x-2">
 							<Button onClick={handleCancel} variant="outline" data-testid="oauth-pending-cancel-btn">
-								Cancel
+								{i18n.t("workspace.oauth.cancel")}
 							</Button>
-							<Button onClick={openPopup} data-testid="oauth-open-window-btn">Open Authorization Window</Button>
+							<Button onClick={openPopup} data-testid="oauth-open-window-btn">
+								{i18n.t("workspace.oauth.openAuthorizationWindow")}
+							</Button>
 						</div>
 					</>
 				)}

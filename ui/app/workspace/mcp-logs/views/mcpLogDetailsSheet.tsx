@@ -182,7 +182,7 @@ export function MCPLogDetailSheet({
 								<AlertDialogDescription>{i18n.t("workspace.mcpLogs.details.deleteConfirmDescription")}</AlertDialogDescription>
 							</AlertDialogHeader>
 							<AlertDialogFooter>
-								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogCancel>{i18n.t("common.cancel")}</AlertDialogCancel>
 								<AlertDialogAction
 									onClick={async (e) => {
 										e.preventDefault();
@@ -198,7 +198,7 @@ export function MCPLogDetailSheet({
 										}
 									}}
 								>
-									Delete
+									{i18n.t("common.delete")}
 								</AlertDialogAction>
 							</AlertDialogFooter>
 						</AlertDialogContent>
@@ -229,7 +229,7 @@ export function MCPLogDetailSheet({
 							<LogEntryDetailsView
 								className="w-full"
 								label={i18n.t("workspace.mcpLogs.latency")}
-								value={displayLog.latency ? `${displayLog.latency.toFixed(2)}ms` : "NA"}
+								value={displayLog.latency ? `${displayLog.latency.toFixed(2)}ms` : i18n.t("workspace.mcpLogs.na")}
 							/>
 						</div>
 					</div>

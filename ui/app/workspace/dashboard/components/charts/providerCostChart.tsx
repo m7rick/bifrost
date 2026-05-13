@@ -1,5 +1,6 @@
 import type { ProviderCostHistogramResponse } from "@/lib/types/logs";
 import { memo, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import {
 	formatCost,
@@ -73,6 +74,7 @@ function CustomTooltip({ active, payload, selectedProvider, displayProviders }: 
 }
 
 function ProviderCostChartImpl({ data, chartType, startTime, endTime, selectedProvider }: ProviderCostChartProps) {
+	const { t } = useTranslation();
 	const { chartData, displayProviders } = useMemo(() => {
 		if (!data?.buckets || !data.bucket_size_seconds) {
 			return { chartData: [], displayProviders: [] };
@@ -113,7 +115,7 @@ function ProviderCostChartImpl({ data, chartType, startTime, endTime, selectedPr
 	}, [data, selectedProvider]);
 
 	if (!data?.buckets || chartData.length === 0) {
-		return <div className="text-muted-foreground flex h-full items-center justify-center text-sm">No data available</div>;
+		return <div className="text-muted-foreground flex h-full items-center justify-center text-sm">{t("common.noDataAvailable")}</div>;
 	}
 
 	const commonProps = {

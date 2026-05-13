@@ -290,7 +290,7 @@ export default function MCPView() {
 						<EnvVarInput
 							id="external-server-url"
 							data-testid="mcp-external-server-url-input"
-							placeholder="https://bifrost.example.com or env.BIFROST_EXTERNAL_URL"
+							placeholder={t("workspace.mcpSettings.serverUrlPlaceholder")}
 							value={localConfig.mcp_external_server_url}
 							onChange={handleServerURLChange}
 							disabled={!hasSettingsUpdateAccess}
@@ -302,17 +302,13 @@ export default function MCPView() {
 							<label htmlFor="external-client-url" className="text-sm font-medium">
 								{t("workspace.mcpSettings.clientUrl")}
 							</label>
-							<p className="text-muted-foreground text-sm">
-								{t("workspace.mcpSettings.clientUrlDescription")}
-							</p>
-							<p className="text-muted-foreground mt-1 text-xs">
-								{t("workspace.mcpSettings.clientUrlWarning")}
-							</p>
+							<p className="text-muted-foreground text-sm">{t("workspace.mcpSettings.clientUrlDescription")}</p>
+							<p className="text-muted-foreground mt-1 text-xs">{t("workspace.mcpSettings.clientUrlWarning")}</p>
 						</div>
 						<EnvVarInput
 							id="external-client-url"
 							data-testid="mcp-external-client-url-input"
-							placeholder="https://bifrost.example.com or env.BIFROST_OAUTH_REDIRECT_URL"
+							placeholder={t("workspace.mcpSettings.clientUrlPlaceholder")}
 							value={localConfig.mcp_external_client_url}
 							onChange={handleClientURLChange}
 							disabled={!hasSettingsUpdateAccess}

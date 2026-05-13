@@ -17,9 +17,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle, Info } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 export default function ProxyView() {
+	const { t } = useTranslation();
 	const hasSettingsUpdateAccess = useRbac(RbacResource.Settings, RbacOperation.Update);
 	const { data: bifrostConfig } = useGetCoreConfigQuery({ fromDB: true });
 	const proxyConfig = bifrostConfig?.proxy_config;
@@ -47,7 +49,7 @@ export default function ProxyView() {
 	const onSubmit = async (data: GlobalProxyConfig) => {
 		try {
 			await updateProxyConfig(data).unwrap();
-			toast.success("Proxy configuration updated successfully.");
+			toast.success(t("workspace.config.proxy.configurationUpdated"));
 		} catch (error) {
 			toast.error(getErrorMessage(error));
 		}
@@ -86,7 +88,7 @@ export default function ProxyView() {
 
 						{/* Proxy Configuration Section */}
 						<div className={cn("space-y-4 rounded-lg border p-4 transition-opacity", !watchedEnabled && "pointer-events-none opacity-50")}>
-							<h3 className="text-lg font-medium">Proxy Configuration</h3>
+							<h3 className="text-lg font-medium">{t("workspace.providers.saveProxyConfiguration")}</h3>
 
 							{/* Proxy Type */}
 							<FormField
@@ -94,25 +96,25 @@ export default function ProxyView() {
 								name="type"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Proxy Type</FormLabel>
+										<FormLabel>{t("workspace.providers.proxyType")}</FormLabel>
 										<Select onValueChange={field.onChange} value={field.value} disabled={!watchedEnabled}>
 											<FormControl>
 												<SelectTrigger className="w-48">
-													<SelectValue placeholder="Select type" />
+												<SelectValue placeholder={t("workspace.providers.selectType")} />
 												</SelectTrigger>
 											</FormControl>
 											<SelectContent>
-												<SelectItem value="http">HTTP / HTTPS</SelectItem>
+											<SelectItem value="http">HTTP / HTTPS</SelectItem>
 												<SelectItem value="socks5" disabled>
 													SOCKS5{" "}
 													<Badge variant="outline" className="ml-2 text-xs">
-														Coming soon
+													Coming soon
 													</Badge>
 												</SelectItem>
 												<SelectItem value="tcp" disabled>
 													TCP{" "}
 													<Badge variant="outline" className="ml-2 text-xs">
-														Coming soon
+													Coming soon
 													</Badge>
 												</SelectItem>
 											</SelectContent>
@@ -136,7 +138,7 @@ export default function ProxyView() {
 								name="url"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Proxy URL</FormLabel>
+										<FormLabel>{t("workspace.providers.proxyUrl")}</FormLabel>
 										<FormControl>
 											<Input placeholder="http://proxy.example.com:8080" disabled={!watchedEnabled} {...field} />
 										</FormControl>

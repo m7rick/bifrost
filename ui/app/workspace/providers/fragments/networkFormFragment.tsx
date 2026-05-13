@@ -171,7 +171,7 @@ export function NetworkFormFragment({ provider }: NetworkFormFragmentProps) {
 										</FormLabel>
 										<FormControl>
 											<Input
-												placeholder={isCustomProvider ? "https://api.your-provider.com" : "https://api.example.com"}
+												placeholder={isCustomProvider ? t("workspace.providers.baseUrlCustomPlaceholder") : t("workspace.providers.baseUrlPlaceholder")}
 												{...field}
 												value={field.value || ""}
 												disabled={!hasUpdateProviderAccess}
@@ -191,7 +191,7 @@ export function NetworkFormFragment({ provider }: NetworkFormFragmentProps) {
 										<FormLabel>{t("workspace.providers.timeoutSeconds")}</FormLabel>
 										<FormControl>
 											<Input
-												placeholder="30"
+												placeholder={t("workspace.providers.timeoutSecondsPlaceholder")}
 												{...field}
 												value={field.value === undefined || Number.isNaN(field.value) ? "" : field.value}
 												disabled={!hasUpdateProviderAccess}
@@ -222,7 +222,7 @@ export function NetworkFormFragment({ provider }: NetworkFormFragmentProps) {
 										<FormLabel>{t("workspace.providers.streamIdleTimeoutSeconds")}</FormLabel>
 										<FormControl>
 											<Input
-												placeholder="60"
+												placeholder={t("workspace.providers.streamIdleTimeoutPlaceholder")}
 												data-testid="network-config-stream-idle-timeout-input"
 												{...field}
 												value={field.value === undefined || Number.isNaN(field.value) ? "" : field.value}
@@ -256,7 +256,7 @@ export function NetworkFormFragment({ provider }: NetworkFormFragmentProps) {
 										<FormLabel>{t("workspace.providers.maxRetries")}</FormLabel>
 										<FormControl>
 											<Input
-												placeholder="0"
+												placeholder={t("workspace.providers.maxRetriesPlaceholder")}
 												{...field}
 												value={field.value === undefined || Number.isNaN(field.value) ? "" : field.value}
 												disabled={!hasUpdateProviderAccess}
@@ -288,7 +288,7 @@ export function NetworkFormFragment({ provider }: NetworkFormFragmentProps) {
 										<FormLabel>{t("workspace.providers.initialBackoffMs")}</FormLabel>
 										<FormControl>
 											<Input
-												placeholder="e.g 500"
+												placeholder={t("workspace.providers.initialBackoffPlaceholder")}
 												{...field}
 												value={field.value === undefined || Number.isNaN(field.value) ? "" : field.value}
 												disabled={!hasUpdateProviderAccess}
@@ -318,7 +318,7 @@ export function NetworkFormFragment({ provider }: NetworkFormFragmentProps) {
 										<FormLabel>{t("workspace.providers.maxBackoffMs")}</FormLabel>
 										<FormControl>
 											<Input
-												placeholder="e.g 10000"
+												placeholder={t("workspace.providers.maxBackoffPlaceholder")}
 												{...field}
 												value={field.value === undefined || Number.isNaN(field.value) ? "" : field.value}
 												disabled={!hasUpdateProviderAccess}
@@ -351,7 +351,7 @@ export function NetworkFormFragment({ provider }: NetworkFormFragmentProps) {
 										<FormControl>
 											<Input
 												data-testid="network-config-max-conns-per-host-input"
-												placeholder="5000"
+												placeholder={t("workspace.providers.maxConnectionsPerHostPlaceholder")}
 												{...field}
 												value={field.value === undefined || Number.isNaN(field.value) ? "" : field.value}
 												disabled={!hasUpdateProviderAccess}

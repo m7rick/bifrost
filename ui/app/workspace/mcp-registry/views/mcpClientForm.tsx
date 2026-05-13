@@ -577,13 +577,11 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 									<div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
 										<div className="flex items-start gap-2">
 											<Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-700" />
-											<div className="flex-1">
-												<p className="text-xs font-medium text-amber-900">Docker Notice</p>
-												<p className="mt-0.5 text-xs text-amber-800">
-													If not using the official Bifrost Docker image, STDIO connections may not work if required commands (npx, python,
-													etc.) aren't installed. You can safely ignore this if running locally or using a custom image with the necessary
-													dependencies.
-												</p>
+									<div className="flex-1">
+										<p className="text-xs font-medium text-amber-900">{t("workspace.mcpForm.dockerNoticeTitle")}</p>
+										<p className="mt-0.5 text-xs text-amber-800">
+											{t("workspace.mcpForm.dockerNoticeDescription")}
+										</p>
 											</div>
 										</div>
 									</div>
@@ -594,7 +592,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 										name="stdio_config.command"
 										render={({ field }) => (
 											<FormItem>
-												<FormLabel>Command</FormLabel>
+												<FormLabel>{t("workspace.mcpForm.command")}</FormLabel>
 												<FormControl>
 													<Input
 														{...field}
@@ -603,7 +601,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 															field.onChange(e);
 															clearErrors("stdio_config.command");
 														}}
-														placeholder="node, python, /path/to/executable"
+													placeholder={t("workspace.mcpForm.commandPlaceholder")}
 														data-testid="stdio-command-input"
 													/>
 												</FormControl>
@@ -614,22 +612,22 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 
 									{/* Args (local state) */}
 									<div className="space-y-2">
-										<Label>Arguments (comma-separated)</Label>
-										<Input
-											value={argsText}
-											onChange={(e) => setArgsText(e.target.value)}
-											placeholder="--port, 3000, --config, config.json"
+									<Label>{t("workspace.mcpForm.argumentsCommaSeparated")}</Label>
+									<Input
+										value={argsText}
+										onChange={(e) => setArgsText(e.target.value)}
+										placeholder={t("workspace.mcpForm.argumentsPlaceholder")}
 											data-testid="stdio-args-input"
 										/>
 									</div>
 
 									{/* Envs (local state) */}
 									<div className="space-y-2">
-										<Label>Environment Variables (comma-separated)</Label>
-										<Input
-											value={envsText}
-											onChange={(e) => setEnvsText(e.target.value)}
-											placeholder="API_KEY, DATABASE_URL"
+									<Label>{t("workspace.mcpForm.environmentVariablesCommaSeparated")}</Label>
+									<Input
+										value={envsText}
+										onChange={(e) => setEnvsText(e.target.value)}
+										placeholder={t("workspace.mcpForm.environmentVariablesPlaceholder")}
 											data-testid="stdio-envs-input"
 										/>
 									</div>
@@ -641,7 +639,7 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 						<div className="dark:bg-card border-border border-t bg-white px-8 py-4">
 							<div className="flex justify-end gap-2">
 								<Button type="button" variant="outline" onClick={onClose} disabled={isLoading} data-testid="cancel-client-btn">
-									Cancel
+									{t("common.cancel")}
 								</Button>
 								<TooltipProvider>
 									<Tooltip>
@@ -653,13 +651,13 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 													isLoading={isLoading}
 													data-testid="save-client-btn"
 												>
-													Create
+													{t("common.add")}
 												</Button>
 											</span>
 										</TooltipTrigger>
 										{!hasCreateMCPClientAccess && (
 											<TooltipContent>
-												<p>You don't have permission to perform this action</p>
+												<p>{t("workspace.mcpForm.permissionDenied")}</p>
 											</TooltipContent>
 										)}
 									</Tooltip>
@@ -678,13 +676,13 @@ const ClientForm: React.FC<ClientFormProps> = ({ open, onClose, onSaved }) => {
 						setOauthFlow(null);
 					}}
 					onSuccess={() => {
-						toast({ title: "Success", description: "MCP server connected with OAuth" });
+						toast({ title: t("workspace.mcpForm.successTitle"), description: t("workspace.mcpForm.oauthConnected") });
 						setOauthFlow(null);
 						onClose();
 						onSaved();
 					}}
 					onError={(error) => {
-						toast({ title: "OAuth Error", description: error, variant: "destructive" });
+						toast({ title: t("workspace.mcpForm.oauthErrorTitle"), description: error, variant: "destructive" });
 					}}
 					authorizeUrl={oauthFlow.authorizeUrl}
 					oauthConfigId={oauthFlow.oauthConfigId}
