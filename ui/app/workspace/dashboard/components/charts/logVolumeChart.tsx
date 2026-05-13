@@ -1,5 +1,5 @@
 import type { LogsHistogramResponse } from "@/lib/types/logs";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CHART_COLORS, formatFullTimestamp, formatTimestamp } from "../../utils/chartUtils";
 import { ChartErrorBoundary } from "./chartErrorBoundary";
@@ -55,7 +55,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 	);
 }
 
-export function LogVolumeChart({ data, chartType, startTime, endTime }: LogVolumeChartProps) {
+function LogVolumeChartImpl({ data, chartType, startTime, endTime }: LogVolumeChartProps) {
 	const chartData = useMemo(() => {
 		if (!data?.buckets || !data.bucket_size_seconds) {
 			return [];
@@ -168,3 +168,5 @@ export function LogVolumeChart({ data, chartType, startTime, endTime }: LogVolum
 		</ChartErrorBoundary>
 	);
 }
+
+export const LogVolumeChart = memo(LogVolumeChartImpl);

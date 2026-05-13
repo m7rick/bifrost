@@ -449,7 +449,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 							<FormItem>
 								<FormLabel>{t("workspace.providers.apiKeyForm.endpointRequired")}</FormLabel>
 								<FormControl>
-									<EnvVarInput placeholder="https://your-resource.openai.azure.com or env.AZURE_ENDPOINT" {...field} />
+									<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.azureEndpointPlaceholder")} {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -462,7 +462,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 							<FormItem>
 								<FormLabel>{t("workspace.providers.apiKeyForm.apiVersionOptional")}</FormLabel>
 								<FormControl>
-									<EnvVarInput placeholder="2024-02-01 or env.AZURE_API_VERSION" {...field} />
+									<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.azureApiVersionPlaceholder")} {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -478,7 +478,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 									<FormItem>
 										<FormLabel>{t("workspace.providers.apiKeyForm.clientIdRequired")}</FormLabel>
 										<FormControl>
-											<EnvVarInput placeholder="your-client-id or env.AZURE_CLIENT_ID" {...field} />
+											<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.azureClientIdPlaceholder")} {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -491,7 +491,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 									<FormItem>
 										<FormLabel>{t("workspace.providers.apiKeyForm.clientSecretRequired")}</FormLabel>
 										<FormControl>
-											<EnvVarInput placeholder="your-client-secret or env.AZURE_CLIENT_SECRET" {...field} />
+											<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.azureClientSecretPlaceholder")} {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -504,7 +504,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 									<FormItem>
 										<FormLabel>{t("workspace.providers.apiKeyForm.tenantIdRequired")}</FormLabel>
 										<FormControl>
-											<EnvVarInput placeholder="your-tenant-id or env.AZURE_TENANT_ID" {...field} />
+											<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.azureTenantIdPlaceholder")} {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -591,7 +591,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 							<FormItem>
 								<FormLabel>{t("workspace.providers.apiKeyForm.projectIdRequired")}</FormLabel>
 								<FormControl>
-									<EnvVarInput placeholder="your-gcp-project-id or env.VERTEX_PROJECT_ID" {...field} />
+									<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.vertexProjectIdPlaceholder")} {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -604,7 +604,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 							<FormItem>
 								<FormLabel>{t("workspace.providers.apiKeyForm.projectNumberRequiredFineTuned")}</FormLabel>
 								<FormControl>
-									<EnvVarInput placeholder="your-gcp-project-number or env.VERTEX_PROJECT_NUMBER" {...field} />
+									<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.vertexProjectNumberPlaceholder")} {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -617,7 +617,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 							<FormItem>
 								<FormLabel>{t("workspace.providers.apiKeyForm.regionRequired")}</FormLabel>
 								<FormControl>
-									<EnvVarInput placeholder="us-central1 or env.VERTEX_REGION" {...field} />
+									<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.vertexRegionPlaceholder")} {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -637,7 +637,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 											data-testid="apikey-vertex-auth-credentials-input"
 											variant="textarea"
 											rows={4}
-											placeholder='{"type":"service_account","project_id":"your-gcp-project",...} or env.VERTEX_CREDENTIALS'
+											placeholder={t("workspace.providers.apiKeyForm.vertexAuthCredentialsPlaceholder")}
 											inputClassName="font-mono text-sm"
 											{...field}
 										/>
@@ -707,7 +707,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 								<FormLabel>{t("workspace.providers.apiKeyForm.serverUrlRequired")}</FormLabel>
 								<FormDescription>{t("workspace.providers.apiKeyForm.vllmServerUrlDesc")}</FormDescription>
 								<FormControl>
-									<EnvVarInput data-testid="key-input-vllm-url" placeholder="http://vllm-server:8000" {...field} />
+									<EnvVarInput data-testid="key-input-vllm-url" placeholder={t("workspace.providers.apiKeyForm.vllmUrlPlaceholder")} {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -721,7 +721,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 								<FormLabel>{t("workspace.providers.apiKeyForm.modelNameRequired")}</FormLabel>
 								<FormDescription>{t("workspace.providers.apiKeyForm.vllmModelNameDesc")}</FormDescription>
 								<FormControl>
-									<Input data-testid="key-input-vllm-model-name" placeholder="meta-llama/Llama-3-70b-hf" {...field} />
+									<Input data-testid="key-input-vllm-model-name" placeholder={t("workspace.providers.apiKeyForm.vllmModelNamePlaceholder")} {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -813,7 +813,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 									<FormItem>
 										<FormLabel>{t("workspace.providers.apiKeyForm.accessKeyRequired")}</FormLabel>
 										<FormControl>
-											<EnvVarInput placeholder="your-aws-access-key or env.AWS_ACCESS_KEY_ID" {...field} />
+											<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.awsAccessKeyPlaceholder")} {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -826,7 +826,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 									<FormItem>
 										<FormLabel>{t("workspace.providers.apiKeyForm.secretKeyRequired")}</FormLabel>
 										<FormControl>
-											<EnvVarInput placeholder="your-aws-secret-key or env.AWS_SECRET_ACCESS_KEY" {...field} />
+											<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.awsSecretKeyPlaceholder")} {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -839,7 +839,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 									<FormItem>
 										<FormLabel>{t("workspace.providers.apiKeyForm.sessionTokenOptional")}</FormLabel>
 										<FormControl>
-											<EnvVarInput placeholder="your-aws-session-token or env.AWS_SESSION_TOKEN" {...field} />
+											<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.awsSessionTokenPlaceholder")} {...field} />
 										</FormControl>
 										<FormMessage />
 									</FormItem>
@@ -876,7 +876,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 							<FormItem>
 								<FormLabel>{t("workspace.providers.apiKeyForm.regionRequired")}</FormLabel>
 								<FormControl>
-									<EnvVarInput placeholder="us-east-1 or env.AWS_REGION" {...field} />
+									<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.awsRegionPlaceholder")} {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>
@@ -894,7 +894,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 										<FormControl>
 											<EnvVarInput
 												data-testid="apikey-bedrock-role-arn-input"
-												placeholder="arn:aws:iam::123456789:role/MyRole or env.AWS_ROLE_ARN"
+											placeholder={t("workspace.providers.apiKeyForm.awsRoleArnPlaceholder")}
 												{...field}
 											/>
 										</FormControl>
@@ -912,7 +912,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 										<FormControl>
 											<EnvVarInput
 												data-testid="apikey-bedrock-external-id-input"
-												placeholder="external-id or env.AWS_EXTERNAL_ID"
+											placeholder={t("workspace.providers.apiKeyForm.awsExternalIdPlaceholder")}
 												{...field}
 											/>
 										</FormControl>
@@ -930,7 +930,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 										<FormControl>
 											<EnvVarInput
 												data-testid="apikey-bedrock-session-name-input"
-												placeholder="bifrost-session or env.AWS_SESSION_NAME"
+											placeholder={t("workspace.providers.apiKeyForm.awsSessionNamePlaceholder")}
 												{...field}
 											/>
 										</FormControl>
@@ -947,7 +947,7 @@ export function ApiKeyFormFragment({ control, providerName, form }: Props) {
 							<FormItem>
 								<FormLabel>{t("workspace.providers.apiKeyForm.arnOptional")}</FormLabel>
 								<FormControl>
-									<EnvVarInput placeholder="arn:aws:bedrock:us-east-1:123:inference-profile or env.AWS_ARN" {...field} />
+									<EnvVarInput placeholder={t("workspace.providers.apiKeyForm.awsArnPlaceholder")} {...field} />
 								</FormControl>
 								<FormMessage />
 							</FormItem>

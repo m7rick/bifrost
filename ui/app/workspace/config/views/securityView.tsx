@@ -347,7 +347,7 @@ export default function SecurityView() {
 						<Textarea
 							id="allowed-origins"
 							className="h-24"
-							placeholder="https://app.example.com, https://*.example.com, *"
+							placeholder={t("workspace.config.security.allowedOriginsPlaceholder")}
 							value={localValues.allowed_origins}
 							onChange={(e) => handleAllowedOriginsChange(e.target.value)}
 						/>
@@ -365,7 +365,7 @@ export default function SecurityView() {
 						<Textarea
 							id="allowed-headers"
 							className="h-24"
-							placeholder="X-Stainless-Timeout"
+							placeholder={t("workspace.config.security.allowedHeadersPlaceholder")}
 							value={localValues.allowed_headers}
 							onChange={(e) => handleAllowedHeadersChange(e.target.value)}
 						/>
@@ -384,7 +384,7 @@ export default function SecurityView() {
 							id="required-headers"
 							data-testid="required-headers-textarea"
 							className="h-24"
-							placeholder="X-Tenant-ID, X-Custom-Header"
+							placeholder={t("workspace.config.security.requiredHeadersPlaceholder")}
 							value={localValues.required_headers}
 							onChange={(e) => handleRequiredHeadersChange(e.target.value)}
 						/>
@@ -407,7 +407,7 @@ export default function SecurityView() {
 							id="whitelisted-routes"
 							data-testid="whitelisted-routes-textarea"
 							className="h-24"
-							placeholder="/api/custom-webhook, /api/public-endpoint"
+							placeholder={t("workspace.config.security.whitelistedRoutesPlaceholder")}
 							value={localValues.whitelisted_routes}
 							onChange={(e) => handleWhitelistedRoutesChange(e.target.value)}
 						/>

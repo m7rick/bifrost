@@ -22,11 +22,12 @@ import {
 import { DottedSeparator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Status, StatusColors, Statuses } from "@/lib/constants/logs";
+import { useGetMCPLogByIdQuery } from "@/lib/store";
 import type { MCPToolLogEntry } from "@/lib/types/logs";
 import { downloadAsJson } from "@/lib/utils/browser-download";
 import i18n from "@/lib/i18n";
 import { addMilliseconds, format, isValid } from "date-fns";
-import { ChevronDown, ChevronUp, Download, MoreVertical, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Download, Loader2, MoreVertical, Trash2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
@@ -77,6 +78,13 @@ export function MCPLogDetailSheet({
 	hasNext = false,
 }: MCPLogDetailSheetProps) {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const {
+		data: fullLog,
+		isLoading,
+		isError,
+	} = useGetMCPLogByIdQuery(log?.id ?? "", {
+		skip: !open || !log?.id,
+	});
 
 	// Keyboard navigation: arrow up/down to navigate between logs
 	useHotkeys("up", () => onNavigate?.("prev"), { enabled: open && hasPrev, preventDefault: true });
@@ -84,19 +92,35 @@ export function MCPLogDetailSheet({
 
 	if (!log) return null;
 
+	const isFullDataReady = isError || (fullLog?.id === log.id && !isLoading);
+	const displayLog = isFullDataReady && fullLog ? fullLog : log;
+
+	if (!isFullDataReady) {
+		return (
+			<Sheet open={open} onOpenChange={onOpenChange}>
+				<SheetContent className="flex w-full flex-col gap-4 overflow-x-hidden p-8 sm:max-w-[60%]">
+					<div className="flex h-full items-center justify-center">
+						<SheetTitle className="sr-only">Loading MCP log details</SheetTitle>
+						<Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+					</div>
+				</SheetContent>
+			</Sheet>
+		);
+	}
+
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent className="flex w-full flex-col gap-4 overflow-x-hidden p-8 sm:max-w-[60%]">
 				<SheetHeader className="flex flex-row items-center px-0">
 					<div className="flex w-full items-center justify-between">
 						<SheetTitle className="flex w-fit items-center gap-2 font-medium">
-							{log.id && (
+							{displayLog.id && (
 								<p className="text-md max-w-full truncate">
-									{i18n.t("workspace.mcpLogs.details.requestId")} {log.id}
+									{i18n.t("workspace.mcpLogs.details.requestId")} {displayLog.id}
 								</p>
 							)}
-							<Badge variant="outline" className={`${StatusColors[getValidatedStatus(log.status)]} uppercase`}>
-								{log.status}
+							<Badge variant="outline" className={`${StatusColors[getValidatedStatus(displayLog.status)]} uppercase`}>
+								{displayLog.status}
 							</Badge>
 						</SheetTitle>
 					</div>
@@ -132,7 +156,10 @@ export function MCPLogDetailSheet({
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
-								<DropdownMenuItem data-testid="export-log-json" onClick={() => downloadAsJson(log, `mcp-log-${log.id ?? "export"}.json`)}>
+								<DropdownMenuItem
+									data-testid="export-log-json"
+									onClick={() => downloadAsJson(displayLog, `mcp-log-${displayLog.id ?? "export"}.json`)}
+								>
 									<Download className="h-4 w-4" />
 									{i18n.t("workspace.mcpLogs.details.exportJson")}
 								</DropdownMenuItem>
@@ -140,10 +167,10 @@ export function MCPLogDetailSheet({
 									<>
 										<DropdownMenuSeparator />
 										<AlertDialogTrigger asChild>
-											<DropdownMenuItem variant="destructive">
-												<Trash2 className="h-4 w-4" />
-												{i18n.t("workspace.mcpLogs.details.deleteLog")}
-											</DropdownMenuItem>
+										<DropdownMenuItem variant="destructive">
+											<Trash2 className="h-4 w-4" />
+											{i18n.t("workspace.mcpLogs.details.deleteLog")}
+										</DropdownMenuItem>
 										</AlertDialogTrigger>
 									</>
 								) : null}
@@ -155,13 +182,13 @@ export function MCPLogDetailSheet({
 								<AlertDialogDescription>{i18n.t("workspace.mcpLogs.details.deleteConfirmDescription")}</AlertDialogDescription>
 							</AlertDialogHeader>
 							<AlertDialogFooter>
-								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogCancel>{i18n.t("common.cancel")}</AlertDialogCancel>
 								<AlertDialogAction
 									onClick={async (e) => {
 										e.preventDefault();
 										if (!handleDelete) return;
 										try {
-											await handleDelete(log);
+											await handleDelete(displayLog);
 											setDeleteDialogOpen(false);
 											onOpenChange(false);
 										} catch (err) {
@@ -171,7 +198,7 @@ export function MCPLogDetailSheet({
 										}
 									}}
 								>
-									Delete
+									{i18n.t("common.delete")}
 								</AlertDialogAction>
 							</AlertDialogFooter>
 						</AlertDialogContent>
@@ -185,8 +212,8 @@ export function MCPLogDetailSheet({
 								className="w-full"
 								label={i18n.t("workspace.mcpLogs.details.startTimestamp")}
 								value={
-									isValid(new Date(log.timestamp))
-										? format(new Date(log.timestamp), "yyyy-MM-dd hh:mm:ss aa")
+									isValid(new Date(displayLog.timestamp))
+										? format(new Date(displayLog.timestamp), "yyyy-MM-dd hh:mm:ss aa")
 										: i18n.t("workspace.mcpLogs.invalidDate")
 								}
 							/>
@@ -194,15 +221,15 @@ export function MCPLogDetailSheet({
 								className="w-full"
 								label={i18n.t("workspace.mcpLogs.details.endTimestamp")}
 								value={
-									isValid(new Date(log.timestamp))
-										? format(addMilliseconds(new Date(log.timestamp), log.latency || 0), "yyyy-MM-dd hh:mm:ss aa")
+									isValid(new Date(displayLog.timestamp))
+										? format(addMilliseconds(new Date(displayLog.timestamp), displayLog.latency || 0), "yyyy-MM-dd hh:mm:ss aa")
 										: i18n.t("workspace.mcpLogs.invalidDate")
 								}
 							/>
 							<LogEntryDetailsView
 								className="w-full"
 								label={i18n.t("workspace.mcpLogs.latency")}
-								value={log.latency ? `${log.latency.toFixed(2)}ms` : i18n.t("workspace.mcpLogs.na")}
+								value={displayLog.latency ? `${displayLog.latency.toFixed(2)}ms` : i18n.t("workspace.mcpLogs.na")}
 							/>
 						</div>
 					</div>
@@ -213,33 +240,33 @@ export function MCPLogDetailSheet({
 							<LogEntryDetailsView
 								className="col-span-2 w-full"
 								label={i18n.t("workspace.mcpLogs.details.toolName")}
-								value={<span className="font-mono text-sm">{log.tool_name}</span>}
+								value={<span className="font-mono text-sm">{displayLog.tool_name}</span>}
 							/>
 							<LogEntryDetailsView
 								className="w-full"
 								label={i18n.t("workspace.mcpLogs.server")}
 								value={
-									log.server_label ? (
+									displayLog.server_label ? (
 										<Badge variant="secondary" className="font-mono">
-											{log.server_label}
+											{displayLog.server_label}
 										</Badge>
 									) : (
 										"-"
 									)
 								}
 							/>
-							{log.virtual_key && (
+							{displayLog.virtual_key && (
 								<LogEntryDetailsView
 									className="w-full"
 									label={i18n.t("workspace.mcpLogs.details.virtualKey")}
-									value={log.virtual_key.name}
+									value={displayLog.virtual_key.name}
 								/>
 							)}
-							{log.llm_request_id && (
+							{displayLog.llm_request_id && (
 								<LogEntryDetailsView
 									className="col-span-3 w-full"
 									label={i18n.t("workspace.mcpLogs.details.llmRequestId")}
-									value={<span className="font-mono text-xs">{log.llm_request_id}</span>}
+									value={<span className="font-mono text-xs">{displayLog.llm_request_id}</span>}
 								/>
 							)}
 						</div>
@@ -247,7 +274,7 @@ export function MCPLogDetailSheet({
 				</div>
 
 				{/* Arguments */}
-				{log.arguments && (
+				{displayLog.arguments && (
 					<div className="w-full rounded-sm border">
 						<div className="border-b px-6 py-2 text-sm font-medium">{i18n.t("workspace.mcpLogs.details.arguments")}</div>
 						<CodeEditor
@@ -255,7 +282,11 @@ export function MCPLogDetailSheet({
 							shouldAdjustInitialHeight={true}
 							maxHeight={250}
 							wrap={true}
-							code={typeof log.arguments === "string" ? log.arguments : JSON.stringify(log.arguments as Record<string, unknown>, null, 2)}
+							code={
+								typeof displayLog.arguments === "string"
+									? displayLog.arguments
+									: JSON.stringify(displayLog.arguments as Record<string, unknown>, null, 2)
+							}
 							lang="json"
 							readonly={true}
 							options={{ scrollBeyondLastLine: false, collapsibleBlocks: true, lineNumbers: "off", alwaysConsumeMouseWheel: false }}
@@ -264,7 +295,7 @@ export function MCPLogDetailSheet({
 				)}
 
 				{/* Result */}
-				{log.result && log.status !== "processing" && (
+				{displayLog.result && displayLog.status !== "processing" && (
 					<div className="w-full rounded-sm border">
 						<div className="border-b px-6 py-2 text-sm font-medium">{i18n.t("workspace.mcpLogs.details.result")}</div>
 						<CodeEditor
@@ -272,7 +303,7 @@ export function MCPLogDetailSheet({
 							shouldAdjustInitialHeight={true}
 							maxHeight={350}
 							wrap={true}
-							code={typeof log.result === "string" ? log.result : JSON.stringify(log.result, null, 2)}
+							code={typeof displayLog.result === "string" ? displayLog.result : JSON.stringify(displayLog.result, null, 2)}
 							lang="json"
 							readonly={true}
 							options={{ scrollBeyondLastLine: false, collapsibleBlocks: true, lineNumbers: "off", alwaysConsumeMouseWheel: false }}
@@ -281,11 +312,11 @@ export function MCPLogDetailSheet({
 				)}
 
 				{/* Metadata */}
-				{log.metadata && Object.keys(log.metadata).length > 0 && (
+				{displayLog.metadata && Object.keys(displayLog.metadata).length > 0 && (
 					<div className="space-y-4 rounded-sm border px-6 py-4">
 						<BlockHeader title={i18n.t("workspace.mcpLogs.details.metadata")} />
 						<div className="grid w-full grid-cols-3 items-start justify-between gap-4">
-							{Object.entries(log.metadata).map(([key, value]) => (
+							{Object.entries(displayLog.metadata).map(([key, value]) => (
 								<LogEntryDetailsView key={key} className="w-full" label={key} value={String(value)} />
 							))}
 						</div>
@@ -293,7 +324,7 @@ export function MCPLogDetailSheet({
 				)}
 
 				{/* Error Details */}
-				{log.error_details && (
+				{displayLog.error_details && (
 					<div className="border-destructive/50 w-full rounded-sm border">
 						<div className="border-destructive/50 text-destructive border-b px-6 py-2 text-sm font-medium">
 							{i18n.t("workspace.mcpLogs.details.errorDetails")}
@@ -303,7 +334,7 @@ export function MCPLogDetailSheet({
 							shouldAdjustInitialHeight={true}
 							maxHeight={250}
 							wrap={true}
-							code={JSON.stringify(log.error_details, null, 2)}
+							code={JSON.stringify(displayLog.error_details, null, 2)}
 							lang="json"
 							readonly={true}
 							options={{ scrollBeyondLastLine: false, collapsibleBlocks: true, lineNumbers: "off", alwaysConsumeMouseWheel: false }}

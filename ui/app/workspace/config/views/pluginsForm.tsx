@@ -297,7 +297,7 @@ export default function PluginsForm({ isVectorStoreEnabled }: PluginsFormProps) 
 										<Label htmlFor="embedding_model">{t("workspace.config.caching.embeddingModel")}</Label>
 										<Input
 											id="embedding_model"
-											placeholder="text-embedding-3-small"
+											placeholder={t("workspace.config.caching.embeddingModelPlaceholder")}
 											value={cacheConfig.embedding_model ?? ""}
 											onChange={(e) => updateCacheConfigLocal({ embedding_model: e.target.value })}
 										/>

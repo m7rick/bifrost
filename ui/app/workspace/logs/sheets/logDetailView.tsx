@@ -34,6 +34,7 @@ import { Link } from "@tanstack/react-router";
 import { addMilliseconds, format } from "date-fns";
 import { AlertCircle, ChevronDown, Clipboard, Copy, Download, Loader2, MoreVertical, Trash2, Wrench } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import BlockHeader from "../views/blockHeader";
 import CollapsibleBox from "../views/collapsibleBox";
@@ -169,57 +170,46 @@ const getResponsesRole = (msg: ResponsesMessage): MessageRole => {
 };
 
 const isPlainAssistantResponsesMessage = (m: ResponsesMessage): boolean => {
-  if (m.type && m.type !== "message") return false;
-  return getResponsesRole(m) === "assistant";
+	if (m.type && m.type !== "message") return false;
+	return getResponsesRole(m) === "assistant";
 };
 
-const isReasoningResponsesMessage = (m: ResponsesMessage): boolean =>
-  m.type === "reasoning";
+const isReasoningResponsesMessage = (m: ResponsesMessage): boolean => m.type === "reasoning";
 
 // Streaming providers can emit a single logical assistant turn (or reasoning
 // item) as many small messages. Collapse adjacent ones so the UI shows one
 // bubble per turn instead of N "1 line" bubbles.
-const coalesceResponsesMessages = (
-  msgs: ResponsesMessage[],
-): ResponsesMessage[] => {
-  const out: ResponsesMessage[] = [];
-  for (const m of msgs) {
-    const last = out[out.length - 1];
-    if (
-      last &&
-      isPlainAssistantResponsesMessage(last) &&
-      isPlainAssistantResponsesMessage(m)
-    ) {
-      const merged = extractResponsesText(last) + extractResponsesText(m);
-      out[out.length - 1] = {
-        ...last,
-        content: [{ type: "output_text", text: merged } as any],
-      };
-      continue;
-    }
-    if (
-      last &&
-      isReasoningResponsesMessage(last) &&
-      isReasoningResponsesMessage(m)
-    ) {
-      const aSum = last.summary ?? [];
-      const bSum = m.summary ?? [];
-      const aEnc = (last as any).encrypted_content ?? "";
-      const bEnc = (m as any).encrypted_content ?? "";
-      const joinedEnc = `${aEnc}${bEnc}`;
-      out[out.length - 1] = {
-        ...last,
-        summary: [...aSum, ...bSum],
-        encrypted_content: joinedEnc ? joinedEnc : undefined,
-      } as ResponsesMessage;
-      continue;
-    }
-    out.push(m);
-  }
-  return out.filter((m) => {
-    if (!isPlainAssistantResponsesMessage(m)) return true;
-    return extractResponsesText(m).length > 0;
-  });
+const coalesceResponsesMessages = (msgs: ResponsesMessage[]): ResponsesMessage[] => {
+	const out: ResponsesMessage[] = [];
+	for (const m of msgs) {
+		const last = out[out.length - 1];
+		if (last && isPlainAssistantResponsesMessage(last) && isPlainAssistantResponsesMessage(m)) {
+			const merged = extractResponsesText(last) + extractResponsesText(m);
+			out[out.length - 1] = {
+				...last,
+				content: [{ type: "output_text", text: merged } as any],
+			};
+			continue;
+		}
+		if (last && isReasoningResponsesMessage(last) && isReasoningResponsesMessage(m)) {
+			const aSum = last.summary ?? [];
+			const bSum = m.summary ?? [];
+			const aEnc = (last as any).encrypted_content ?? "";
+			const bEnc = (m as any).encrypted_content ?? "";
+			const joinedEnc = `${aEnc}${bEnc}`;
+			out[out.length - 1] = {
+				...last,
+				summary: [...aSum, ...bSum],
+				encrypted_content: joinedEnc ? joinedEnc : undefined,
+			} as ResponsesMessage;
+			continue;
+		}
+		out.push(m);
+	}
+	return out.filter((m) => {
+		if (!isPlainAssistantResponsesMessage(m)) return true;
+		return extractResponsesText(m).length > 0;
+	});
 };
 
 const extractMessageText = (message: any): string => {
@@ -324,7 +314,8 @@ function HeroStat({
 }
 
 function CopyInlineButton({ text }: { text: string }) {
-	const { copy } = useCopyToClipboard({ successMessage: "Copied" });
+	const { t } = useTranslation();
+	const { copy } = useCopyToClipboard({ successMessage: t("common.copied") });
 	return (
 		<button
 			type="button"
@@ -333,7 +324,7 @@ function CopyInlineButton({ text }: { text: string }) {
 				copy(text);
 			}}
 			className="text-muted-foreground hover:bg-muted hover:text-foreground inline-flex h-6 w-6 items-center justify-center rounded-sm transition"
-			aria-label="Copy"
+			aria-label={t("common.copy")}
 		>
 			<Clipboard className="h-3.5 w-3.5" />
 		</button>
@@ -355,20 +346,13 @@ const messageDotClass: Record<MessageRole, string> = {
 	reasoning: "bg-violet-500",
 	tool: "bg-amber-500",
 };
-const messageRoleLabel: Record<MessageRole, string> = {
-	system: "System",
-	user: "User",
-	assistant: "Assistant",
-	reasoning: "Reasoning",
-	tool: "Tool Result",
-};
-
 function RoutingDecisionLogs({ logs }: { logs: string }) {
-	const { copy } = useCopyToClipboard({ successMessage: "Copied" });
+	const { t } = useTranslation();
+	const { copy } = useCopyToClipboard({ successMessage: t("common.copied") });
 	return (
 		<div className="w-full rounded-sm border">
 			<div className="flex items-center justify-between border-b py-2 pl-6">
-				<div className="text-sm font-medium">Routing Decision Logs</div>
+				<div className="text-sm font-medium">{t("workspace.logs.detail.routingDecisionLogs")}</div>
 				<button
 					type="button"
 					onClick={() => copy(logs)}
@@ -430,6 +414,7 @@ function EncryptedReveal({ text, label }: { text: string; label: string }) {
 }
 
 function CollapsibleCode({ text, preview = 3, lang, mono = true }: { text: string; preview?: number; lang?: string; mono?: boolean }) {
+	const { t } = useTranslation();
 	const [open, setOpen] = useState(false);
 	const lines = text.split("\n");
 	const shown = open ? lines : lines.slice(0, preview);
@@ -449,12 +434,12 @@ function CollapsibleCode({ text, preview = 3, lang, mono = true }: { text: strin
 						onClick={() => setOpen((o) => !o)}
 						className="text-primary inline-flex items-center gap-1 text-[11.5px] font-medium hover:underline"
 					>
-						{open ? "Show less" : `Show ${moreCount} more lines`}
-						<ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
-					</button>
-					<span className="text-muted-foreground font-mono text-[10.5px]">
-						{lines.length} lines{lang ? ` · ${lang}` : ""}
-					</span>
+					{open ? t("workspace.logs.detail.showLess") : t("workspace.logs.detail.showMoreLines", { count: moreCount })}
+					<ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
+				</button>
+				<span className="text-muted-foreground font-mono text-[10.5px]">
+					{t("workspace.logs.detail.lineCount", { count: lines.length })}{lang ? ` · ${lang}` : ""}
+				</span>
 				</div>
 			)}
 		</>
@@ -462,6 +447,14 @@ function CollapsibleCode({ text, preview = 3, lang, mono = true }: { text: strin
 }
 
 function MessageRow({ role, meta, children, last = false }: { role: MessageRole; meta?: string; children: ReactNode; last?: boolean }) {
+	const { t } = useTranslation();
+	const messageRoleLabel: Record<MessageRole, string> = {
+		system: t("common.system"),
+		user: t("common.user"),
+		assistant: t("common.assistant"),
+		reasoning: t("workspace.logs.detail.reasoning"),
+		tool: t("workspace.logs.detail.toolResult"),
+	};
 	return (
 		<div className="flex gap-3">
 			<div className="flex flex-col items-center pt-1.5">
@@ -498,12 +491,15 @@ export function LogDetailView({
 	headerAction,
 	onFilterByParentRequestId,
 }: LogDetailViewProps) {
+	const { t } = useTranslation();
 	const { copy: copyBody } = useCopyToClipboard({
-		successMessage: "Request body copied to clipboard",
-		errorMessage: "Failed to copy request body",
+		successMessage: t("workspace.logs.detail.requestBodyCopied"),
+		errorMessage: t("workspace.logs.detail.requestBodyCopyFailed"),
 	});
 	const allRoles: MessageRole[] = ["system", "user", "assistant", "tool", "reasoning"];
 	const [visibleRoles, setVisibleRoles] = useState<Set<MessageRole>>(new Set(allRoles));
+	const lineLabel = (count: number) => t("workspace.logs.detail.lineCount", { count });
+	const toolCallLabel = (count: number) => t("workspace.logs.detail.toolCallCount", { count });
 
 	if (!log) return null;
 
@@ -556,7 +552,7 @@ export function LogDetailView({
 			<div className="flex items-center justify-between gap-3">
 				<div className="text-muted-foreground flex items-center gap-2 text-sm">
 					{headerAction}
-					<span className="text-foreground font-medium">Request details</span>
+					<span className="text-foreground font-medium">{t("workspace.logs.detail.requestDetailsTitle")}</span>
 				</div>
 				{onClose ? (
 					<AlertDialog>
@@ -568,27 +564,27 @@ export function LogDetailView({
 							</DropdownMenuTrigger>
 							<DropdownMenuContent align="end">
 								{!isPassthrough && (
-									<DropdownMenuItem onClick={() => copyRequestBody(log, copyBody)} data-testid="logdetails-copy-request-body-button">
-										<Clipboard className="h-4 w-4" />
-										Copy request body
-									</DropdownMenuItem>
-								)}
+								<DropdownMenuItem onClick={() => copyRequestBody(log, copyBody, t)} data-testid="logdetails-copy-request-body-button">
+									<Clipboard className="h-4 w-4" />
+									{t("workspace.logs.detail.copyRequestBody")}
+								</DropdownMenuItem>
+							)}
 								<DropdownMenuItem
 									onClick={() => downloadAsJson(log, `log-${log.id ?? "export"}.json`)}
 									data-testid="logdetails-export-log-button"
 								>
 									<Download className="h-4 w-4" />
-									Export as JSON
+									{t("workspace.logs.detail.exportAsJson")}
 								</DropdownMenuItem>
 
 								{handleDelete ? (
 									<>
 										<DropdownMenuSeparator />
 										<AlertDialogTrigger asChild>
-											<DropdownMenuItem variant="destructive" data-testid="logdetails-delete-item">
-												<Trash2 className="h-4 w-4" />
-												Delete log
-											</DropdownMenuItem>
+										<DropdownMenuItem variant="destructive" data-testid="logdetails-delete-item">
+											<Trash2 className="h-4 w-4" />
+											{t("workspace.logs.detail.deleteLog")}
+										</DropdownMenuItem>
 										</AlertDialogTrigger>{" "}
 									</>
 								) : null}
@@ -596,11 +592,11 @@ export function LogDetailView({
 						</DropdownMenu>
 						<AlertDialogContent>
 							<AlertDialogHeader>
-								<AlertDialogTitle>Are you sure you want to delete this log?</AlertDialogTitle>
-								<AlertDialogDescription>This action cannot be undone. This will permanently delete the log entry.</AlertDialogDescription>
+								<AlertDialogTitle>{t("workspace.logs.detail.deleteConfirmTitle")}</AlertDialogTitle>
+								<AlertDialogDescription>{t("workspace.logs.detail.deleteConfirmDescription")}</AlertDialogDescription>
 							</AlertDialogHeader>
 							<AlertDialogFooter>
-								<AlertDialogCancel data-testid="logdetails-delete-cancel-button">Cancel</AlertDialogCancel>
+								<AlertDialogCancel data-testid="logdetails-delete-cancel-button">{t("common.cancel")}</AlertDialogCancel>
 								<AlertDialogAction
 									data-testid="logdetails-delete-confirm-button"
 									onClick={() => {
@@ -608,7 +604,7 @@ export function LogDetailView({
 										onClose();
 									}}
 								>
-									Delete
+									{t("common.delete")}
 								</AlertDialogAction>
 							</AlertDialogFooter>
 						</AlertDialogContent>
@@ -1442,10 +1438,10 @@ export function LogDetailView({
 									const reasoningTokens = reasoningText ? Math.max(1, Math.round(reasoningText.length / 4)) : 0;
 									const meta = text
 										? role === "system" || role === "tool"
-											? `${lineCount} line${lineCount === 1 ? "" : "s"} · ~${approxTokens} tokens`
-											: `${lineCount} line${lineCount === 1 ? "" : "s"}`
+											? `${lineLabel(lineCount)} · ${t("workspace.logs.detail.approxTokens", { count: approxTokens })}`
+											: lineLabel(lineCount)
 										: hasToolCalls
-											? `${message.tool_calls!.length} tool call${message.tool_calls!.length === 1 ? "" : "s"}`
+											? toolCallLabel(message.tool_calls!.length)
 											: undefined;
 									const usePlainText = role === "user" || role === "assistant";
 									const rows: ReactNode[] = [];
@@ -1480,14 +1476,14 @@ export function LogDetailView({
 														.map((b, i) => {
 															const src = b.image_url?.url;
 															if (!src) return null;
-															return <img key={`${i}-${src}`} src={src} alt="Attached image" className="mt-2 max-w-full rounded border" />;
+															return <img key={`${i}-${src}`} src={src} alt={t("workspace.logs.detail.attachedImageAlt")} className="mt-2 max-w-full rounded border" />;
 														})}
 												{hasToolCalls && text ? (
 													<div className="text-muted-foreground mt-2 text-[11px]">
 														{message
 															.tool_calls!.map((tc) => tc.function?.name)
 															.filter(Boolean)
-															.join(", ") || `${message.tool_calls!.length} tool call${message.tool_calls!.length === 1 ? "" : "s"}`}
+															.join(", ") || toolCallLabel(message.tool_calls!.length)}
 													</div>
 												) : null}
 											</MessageRow>,
@@ -1508,13 +1504,13 @@ export function LogDetailView({
 											log.stop_reason === "refusal" || log.stop_reason === "content_filter" || log.stop_reason === "safety";
 										const showRefusal = refusalText || (!text && isStopReasonRefusal);
 										const lineCount = text ? text.split("\n").length : 0;
-										const tokenMeta = log.token_usage?.completion_tokens ? `${log.token_usage.completion_tokens} tokens` : undefined;
+										const tokenMeta = log.token_usage?.completion_tokens ? t("workspace.logs.detail.tokens", { count: log.token_usage.completion_tokens }) : undefined;
 										const meta = text
 											? tokenMeta
-												? `${lineCount} line${lineCount === 1 ? "" : "s"} · ${tokenMeta}`
-												: `${lineCount} line${lineCount === 1 ? "" : "s"}`
+												? `${lineLabel(lineCount)} · ${tokenMeta}`
+												: lineLabel(lineCount)
 											: showRefusal
-												? "refusal"
+												? t("workspace.logs.detail.refusalMeta")
 												: tokenMeta;
 										const reasoningTokens = reasoningText
 											? log.token_usage?.completion_tokens_details?.reasoning_tokens || Math.max(1, Math.round(reasoningText.length / 4))
@@ -1522,7 +1518,7 @@ export function LogDetailView({
 										return (
 											<>
 												{showReasoning ? (
-													<MessageRow role="reasoning" meta={`~${reasoningTokens} tokens`} last={!showAssistant}>
+													<MessageRow role="reasoning" meta={t("workspace.logs.detail.approxTokens", { count: reasoningTokens })} last={!showAssistant}>
 														<CollapsibleCode text={reasoningText} preview={3} mono={false} />
 													</MessageRow>
 												) : null}
@@ -1532,7 +1528,7 @@ export function LogDetailView({
 															<div className="rounded-sm border border-red-200 bg-red-50/70 p-3 dark:border-red-900 dark:bg-red-950/30">
 																<div className="flex items-center gap-2 text-red-700 dark:text-red-400">
 																	<AlertCircle className="h-4 w-4 shrink-0" />
-																	<span className="text-[12.5px] font-semibold">Refusal</span>
+															<span className="text-[12.5px] font-semibold">{t("workspace.logs.detail.refusalLabel")}</span>
 																</div>
 																{refusalText && (
 																	<div className="mt-2 text-[13px] leading-relaxed break-words whitespace-pre-wrap text-red-700 dark:text-red-400">
@@ -1553,12 +1549,12 @@ export function LogDetailView({
 								{!log.output_message &&
 									!log.error_details?.error.message &&
 									(log.stop_reason === "refusal" || log.stop_reason === "content_filter" || log.stop_reason === "safety") && (
-										<MessageRow role="assistant" meta="refusal" last>
-											<div className="rounded-sm border border-red-200 bg-red-50/70 p-3 dark:border-red-900 dark:bg-red-950/30">
-												<div className="flex items-center gap-2 text-red-700 dark:text-red-400">
-													<AlertCircle className="h-4 w-4 shrink-0" />
-													<span className="text-[12.5px] font-semibold">Refusal</span>
-												</div>
+													<MessageRow role="assistant" meta={t("workspace.logs.detail.refusalMeta")} last>
+														<div className="rounded-sm border border-red-200 bg-red-50/70 p-3 dark:border-red-900 dark:bg-red-950/30">
+															<div className="flex items-center gap-2 text-red-700 dark:text-red-400">
+																<AlertCircle className="h-4 w-4 shrink-0" />
+																<span className="text-[12.5px] font-semibold">{t("workspace.logs.detail.refusalLabel")}</span>
+															</div>
 											</div>
 										</MessageRow>
 									)}
@@ -1600,17 +1596,17 @@ export function LogDetailView({
 											reasoningParts.summaries.length === 0 &&
 											!reasoningParts.contentText;
 										meta = totalApprox
-											? `~${totalApprox} tokens${hasOpaqueOnly ? " · encrypted" : ""}`
+											? `${t("workspace.logs.detail.approxTokens", { count: totalApprox })}${hasOpaqueOnly ? ` · ${t("workspace.logs.detail.encrypted")}` : ""}`
 											: hasOpaqueOnly
-												? "encrypted"
+												? t("workspace.logs.detail.encrypted")
 												: undefined;
 									} else {
 										meta = text
 											? role === "system" || role === "tool"
 												? msg.name
-													? `${msg.name} · ${lineCount} line${lineCount === 1 ? "" : "s"} · ~${approxTokens} tokens`
-													: `${lineCount} line${lineCount === 1 ? "" : "s"} · ~${approxTokens} tokens`
-												: `${lineCount} line${lineCount === 1 ? "" : "s"}`
+													? `${msg.name} · ${lineLabel(lineCount)} · ${t("workspace.logs.detail.approxTokens", { count: approxTokens })}`
+													: `${lineLabel(lineCount)} · ${t("workspace.logs.detail.approxTokens", { count: approxTokens })}`
+												: lineLabel(lineCount)
 											: msg.name
 												? msg.name
 												: msg.type === "function_call_output" && msg.call_id
@@ -1629,29 +1625,31 @@ export function LogDetailView({
 														{reasoningParts.summaries.map((s, i) => (
 															<div key={`s-${i}`} className="space-y-1">
 																{reasoningParts.summaries.length > 1 ? (
-																	<div className="text-muted-foreground text-[10.5px] font-semibold tracking-wider uppercase">
-																		Summary {i + 1}
-																	</div>
-																) : null}
+															<div className="text-muted-foreground text-[10.5px] font-semibold tracking-wider uppercase">{t("workspace.logs.detail.summary", { index: i + 1 })}</div>
+														) : null}
 																<CollapsibleCode text={s} preview={3} mono={false} />
 															</div>
 														))}
 														{reasoningParts.encrypted ? (
 															<div className="space-y-1">
-																<div className="text-muted-foreground text-[10.5px] font-semibold tracking-wider uppercase">Encrypted</div>
+															<div className="text-muted-foreground text-[10.5px] font-semibold tracking-wider uppercase">{t("workspace.logs.detail.encrypted")}</div>
 																<CollapsibleCode text={reasoningParts.encrypted} preview={2} />
 															</div>
 														) : null}
 														{reasoningParts.signatures.length > 0 ? (
-															<EncryptedReveal
-																text={reasoningParts.signatures.join("\n\n")}
-																label={reasoningParts.signatures.length > 1 ? "Encrypted signatures" : "Encrypted signature"}
-															/>
-														) : null}
-													</div>
-												) : (
-													<div className="text-muted-foreground text-[12px] italic">No reasoning content available</div>
-												)
+														<EncryptedReveal
+															text={reasoningParts.signatures.join("\n\n")}
+															label={t(
+																reasoningParts.signatures.length > 1
+																	? "workspace.logs.detail.encryptedSignatures"
+																	: "workspace.logs.detail.encryptedSignature",
+															)}
+														/>
+													) : null}
+												</div>
+											) : (
+												<div className="text-muted-foreground text-[12px] italic">{t("workspace.logs.detail.noReasoningContent")}</div>
+											)
 											) : text ? (
 												usePlainText ? (
 													<CollapsibleCode text={text} preview={3} mono={false} />
@@ -1664,7 +1662,7 @@ export function LogDetailView({
 													preview={3}
 												/>
 											) : (
-												<div className="text-muted-foreground text-[12px] italic">No content</div>
+												<div className="text-muted-foreground text-[12px] italic">{t("workspace.logs.detail.noContent")}</div>
 											)}
 											{Array.isArray(msg.content) &&
 												msg.content
@@ -1674,6 +1672,7 @@ export function LogDetailView({
 															key={`${i}-${b.image_url}`}
 															src={b.image_url}
 															alt="Attached image"
+															alt={t("workspace.logs.detail.attachedImageAlt")}
 															className="mt-2 max-w-full rounded border"
 														/>
 													))}
@@ -1686,20 +1685,20 @@ export function LogDetailView({
 
 					{log.is_large_payload_request && !log.input_history?.length && !log.responses_input_history?.length && (
 						<div className="rounded-sm border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
-							Large payload request — input content was streamed directly to the provider and is not available for display.
-							{log.raw_request && " A truncated preview is available in the Raw JSON tab."}
+							{t("workspace.logs.detail.largePayloadRequest")}
+							{log.raw_request && ` ${t("workspace.logs.detail.rawJsonPreviewSuffix")}`}
 						</div>
 					)}
 					{log.is_large_payload_response && !log.output_message && !log.responses_output?.length && log.status !== "processing" && (
 						<div className="rounded-sm border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-300">
-							Large payload response — response content was streamed directly to the client and is not available for display.
-							{log.raw_response && " A truncated preview is available in the Raw JSON tab."}
+							{t("workspace.logs.detail.largePayloadResponse")}
+							{log.raw_response && ` ${t("workspace.logs.detail.rawJsonPreviewSuffix")}`}
 						</div>
 					)}
 
 					{log.status !== "processing" && log.embedding_output && log.embedding_output.length > 0 && !log.error_details?.error.message && (
 						<div className="bg-card space-y-3 rounded-sm border p-5">
-							<div className="text-sm font-medium">Embedding</div>
+							<div className="text-sm font-medium">{t("workspace.logs.detail.embedding")}</div>
 							<LogChatMessageView
 								message={{
 									role: "assistant",
@@ -1713,7 +1712,7 @@ export function LogDetailView({
 						</div>
 					)}
 					{log.status !== "processing" && log.rerank_output && !log.error_details?.error.message && (
-						<CollapsibleBox title={`Rerank Output (${log.rerank_output.length})`} onCopy={() => JSON.stringify(log.rerank_output, null, 2)}>
+						<CollapsibleBox title={t("workspace.logs.detail.rerankOutput", { count: log.rerank_output.length })} onCopy={() => JSON.stringify(log.rerank_output, null, 2)}>
 							<CodeEditor
 								className="z-0 w-full"
 								shouldAdjustInitialHeight={true}
@@ -1733,7 +1732,7 @@ export function LogDetailView({
 
 					{log.list_models_output && (
 						<CollapsibleBox
-							title={`List Models Output (${log.list_models_output.length})`}
+							title={t("workspace.logs.detail.listModelsOutput", { count: log.list_models_output.length })}
 							onCopy={() => JSON.stringify(log.list_models_output, null, 2)}
 						>
 							<CodeEditor
@@ -1757,7 +1756,7 @@ export function LogDetailView({
 						<div className="rounded-sm border border-red-200 bg-red-50/70 p-5 dark:border-red-900 dark:bg-red-950/30">
 							<div className="flex items-center gap-2 text-red-700 dark:text-red-400">
 								<AlertCircle className="h-4 w-4 shrink-0" />
-								<span className="text-[12.5px] font-semibold">Error</span>
+								<span className="text-[12.5px] font-semibold">{t("workspace.logs.detail.error")}</span>
 								{log.error_details?.error.message ? <CopyInlineButton text={log.error_details.error.message} /> : null}
 							</div>
 							{log.error_details?.error.message ? (
@@ -1768,7 +1767,7 @@ export function LogDetailView({
 							{log.error_details?.error.error != null ? (
 								<details className="group mt-3 rounded-sm border border-red-200/70 bg-white/40 dark:border-red-900/70 dark:bg-red-950/40">
 									<summary className="flex cursor-pointer items-center justify-between px-3 py-2 text-[12px] text-red-700 hover:bg-red-50/80 dark:text-red-400 dark:hover:bg-red-950/60">
-										<span className="font-medium">Details</span>
+										<span className="font-medium">{t("workspace.logs.detail.details")}</span>
 										<ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
 									</summary>
 									<div className="custom-scrollbar max-h-[400px] overflow-y-auto border-t border-red-200/70 px-3 py-2 font-mono text-[11.5px] leading-[1.6] break-words whitespace-pre-wrap text-red-900 dark:border-red-900/70 dark:text-red-300">
@@ -1786,7 +1785,7 @@ export function LogDetailView({
 					{toolsParameter ? (
 						<div className="bg-card rounded-sm border p-5">
 							<div className="text-muted-foreground mb-3 text-[12px]">
-								{log.params?.tools?.length ?? 0} tools exposed to the model
+								{t("workspace.logs.detail.toolsExposed", { count: log.params?.tools?.length ?? 0 })}
 								{(log.params as any)?.tool_choice != null ? (
 									<>
 										{" "}
@@ -1822,7 +1821,7 @@ export function LogDetailView({
 											{schemaJson ? (
 												<div className="border-t">
 													<div className="text-muted-foreground flex items-center justify-between px-3 py-1.5 text-[10.5px] tracking-wider uppercase">
-														<span className="font-semibold">Parameters</span>
+														<span className="font-semibold">{t("workspace.logs.detail.parameters")}</span>
 														<CopyInlineButton text={schemaJson} />
 													</div>
 													<pre className="custom-scrollbar max-h-[300px] overflow-auto border-t px-3 py-2 font-mono text-[11.5px] leading-[1.6] whitespace-pre">
@@ -1830,7 +1829,7 @@ export function LogDetailView({
 													</pre>
 												</div>
 											) : (
-												<div className="text-muted-foreground border-t px-3 py-2 text-[11.5px]">No parameter schema.</div>
+												<div className="text-muted-foreground border-t px-3 py-2 text-[11.5px]">{t("workspace.logs.detail.noParameterSchema")}</div>
 											)}
 										</details>
 									);
@@ -1839,23 +1838,21 @@ export function LogDetailView({
 						</div>
 					) : null}
 					{log.params?.instructions && (
-						<CollapsibleBox title="Instructions" onCopy={() => log.params?.instructions || ""}>
+						<CollapsibleBox title={t("workspace.logs.detail.instructions")} onCopy={() => log.params?.instructions || ""}>
 							<div className="custom-scrollbar max-h-[400px] overflow-y-auto px-6 py-2 font-mono text-xs break-words whitespace-pre-wrap">
 								{log.params.instructions}
 							</div>
 						</CollapsibleBox>
 					)}
 					{!toolsParameter && !log.params?.instructions && (
-						<div className="text-muted-foreground rounded-sm border border-dashed p-5 text-center text-sm">
-							No tools or instructions on this request.
-						</div>
+						<div className="text-muted-foreground rounded-sm border border-dashed p-5 text-center text-sm">{t("workspace.logs.detail.noToolsOrInstructions")}</div>
 					)}
 				</TabsContent>
 
 				<TabsContent value="routing" className="space-y-3">
 					{log.attempt_trail && log.attempt_trail.length > 1 && (
 						<CollapsibleBox
-							title={`Attempt Trail (${log.attempt_trail.length} attempts)`}
+							title={t("workspace.logs.detail.attemptTrail", { count: log.attempt_trail.length })}
 							onCopy={() => JSON.stringify(log.attempt_trail, null, 2)}
 						>
 							<div className="overflow-x-auto px-6 py-3">
@@ -1876,7 +1873,7 @@ export function LogDetailView({
 													{record.fail_reason ? (
 														<span className="text-destructive">{record.fail_reason}</span>
 													) : (
-														<span className="text-green-600 dark:text-green-400">success</span>
+														<span className="text-green-600 dark:text-green-400">{t("workspace.logs.detail.success")}</span>
 													)}
 												</td>
 											</tr>
@@ -1889,9 +1886,7 @@ export function LogDetailView({
 					{log.routing_engine_logs ? (
 						<RoutingDecisionLogs logs={log.routing_engine_logs} />
 					) : (
-						<div className="text-muted-foreground rounded-sm border border-dashed p-5 text-center text-sm">
-							No routing logs for this request.
-						</div>
+						<div className="text-muted-foreground rounded-sm border border-dashed p-5 text-center text-sm">{t("workspace.logs.detail.noRoutingLogs")}</div>
 					)}
 				</TabsContent>
 
@@ -1899,9 +1894,7 @@ export function LogDetailView({
 					{log.plugin_logs ? (
 						<PluginLogsView pluginLogs={log.plugin_logs} />
 					) : (
-						<div className="text-muted-foreground rounded-sm border border-dashed p-5 text-center text-sm">
-							No plugin logs for this request.
-						</div>
+						<div className="text-muted-foreground rounded-sm border border-dashed p-5 text-center text-sm">{t("workspace.logs.detail.noPluginLogs")}</div>
 					)}
 				</TabsContent>
 
@@ -1909,13 +1902,13 @@ export function LogDetailView({
 					{rawRequest && (
 						<>
 							<div className="text-muted-foreground text-[12px]">
-								Raw Request sent to <span className="text-foreground font-medium capitalize">{log.provider}</span>
+								{t("workspace.logs.detail.rawRequestSentTo")} <span className="text-foreground font-medium capitalize">{log.provider}</span>
 								{log.is_large_payload_request && (
-									<span className="ml-2 text-xs font-normal text-amber-600 dark:text-amber-400">(truncated preview)</span>
+									<span className="ml-2 text-xs font-normal text-amber-600 dark:text-amber-400">{t("workspace.logs.detail.truncatedPreview")}</span>
 								)}
 							</div>
 							<CollapsibleBox
-								title={log.is_large_payload_request ? "Raw Request (Truncated)" : "Raw Request"}
+								title={log.is_large_payload_request ? t("workspace.logs.detail.rawRequestTruncated") : t("workspace.logs.detail.rawRequest")}
 								onCopy={() => formatJsonSafe(rawRequest)}
 							>
 								<CodeEditor
@@ -1938,13 +1931,13 @@ export function LogDetailView({
 					{rawResponse && log.status !== "processing" && (
 						<>
 							<div className="text-muted-foreground pt-4 text-[12px]">
-								Raw Response from <span className="text-foreground font-medium capitalize">{log.provider}</span>
+								{t("workspace.logs.detail.rawResponseFrom")} <span className="text-foreground font-medium capitalize">{log.provider}</span>
 								{log.is_large_payload_response && (
-									<span className="ml-2 text-xs font-normal text-amber-600 dark:text-amber-400">(truncated preview)</span>
+									<span className="ml-2 text-xs font-normal text-amber-600 dark:text-amber-400">{t("workspace.logs.detail.truncatedPreview")}</span>
 								)}
 							</div>
 							<CollapsibleBox
-								title={log.is_large_payload_response ? "Raw Response (Truncated)" : "Raw Response"}
+								title={log.is_large_payload_response ? t("workspace.logs.detail.rawResponseTruncated") : t("workspace.logs.detail.rawResponse")}
 								onCopy={() => formatJsonSafe(rawResponse)}
 							>
 								<CodeEditor
@@ -1965,7 +1958,7 @@ export function LogDetailView({
 						</>
 					)}
 					{!rawRequest && !rawResponse && !passthroughRequestBody && !passthroughResponseBody && (
-						<div className="text-muted-foreground rounded-sm border border-dashed p-5 text-center text-sm">No raw JSON available.</div>
+						<div className="text-muted-foreground rounded-sm border border-dashed p-5 text-center text-sm">{t("workspace.logs.detail.noRawJson")}</div>
 					)}
 				</TabsContent>
 			</Tabs>
@@ -1973,7 +1966,7 @@ export function LogDetailView({
 	);
 }
 
-const copyRequestBody = async (log: LogEntry, copy: (text: string) => Promise<void>) => {
+const copyRequestBody = async (log: LogEntry, copy: (text: string) => Promise<void>, t: (key: string, options?: Record<string, unknown>) => string) => {
 	try {
 		const isChat = log.object === "chat.completion" || log.object === "chat_completion" || log.object === "chat.completion.chunk";
 		const isResponses = log.object === "response" || log.object === "response.completion.chunk";
@@ -2014,9 +2007,9 @@ const copyRequestBody = async (log: LogEntry, copy: (text: string) => Promise<vo
 		const isSupportedType = isChat || isResponses || isRealtimeTurn || isSpeech || isTextCompletion || isEmbedding;
 		if (!isSupportedType) {
 			if (log.object === "audio.transcription" || log.object === "audio.transcription.chunk") {
-				toast.error("Copy request body is not available for transcription requests");
+				toast.error(t("workspace.logs.detail.copyRequestBodyNotAvailableForTranscription"));
 			} else {
-				toast.error("Copy request body is only available for chat, responses, speech, text completion, and embedding requests");
+				toast.error(t("workspace.logs.detail.copyRequestBodyNotAvailable"));
 			}
 			return;
 		}
@@ -2072,6 +2065,6 @@ const copyRequestBody = async (log: LogEntry, copy: (text: string) => Promise<vo
 		const requestBodyJson = JSON.stringify(requestBody, null, 2);
 		await copy(requestBodyJson);
 	} catch {
-		toast.error("Failed to copy request body");
+		toast.error(t("workspace.logs.detail.requestBodyCopyFailed"));
 	}
 };

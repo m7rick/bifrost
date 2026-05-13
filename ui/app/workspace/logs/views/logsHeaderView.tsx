@@ -9,6 +9,7 @@ import type { LogFilters as LogFiltersType } from "@/lib/types/logs";
 import { getRangeForPeriod, TIME_PERIODS } from "@/lib/utils/timeRange";
 import { Calculator, MoreVertical, Radio, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 interface LogsHeaderViewProps {
@@ -45,6 +46,7 @@ export function LogsHeaderView({
 	onToggleColumnVisibility,
 	onResetColumns,
 }: LogsHeaderViewProps) {
+	const { t } = useTranslation();
 	const [openMoreActionsPopover, setOpenMoreActionsPopover] = useState(false);
 	const [localSearch, setLocalSearch] = useState(filters.content_search || "");
 	const searchTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -79,8 +81,12 @@ export function LogsHeaderView({
 			await fetchLogs();
 			await fetchStats();
 			setOpenMoreActionsPopover(false);
-			toast.success(`Recalculated costs for ${response.updated} logs`, {
-				description: `${response.updated} logs updated, ${response.skipped} logs skipped, ${response.remaining} logs remaining`,
+			toast.success(t("workspace.logs.header.recalculatedCostsTitle", { count: response.updated }), {
+				description: t("workspace.logs.header.recalculatedCostsDescription", {
+					updated: response.updated,
+					skipped: response.skipped,
+					remaining: response.remaining,
+				}),
 				duration: 5000,
 			});
 		} catch (err) {
@@ -114,7 +120,7 @@ export function LogsHeaderView({
 				disabled={loading}
 			>
 				<RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-				Refresh
+				{t("workspace.logs.refresh")}
 			</Button>
 			<Button
 				data-testid="logs-live-btn"
@@ -124,14 +130,14 @@ export function LogsHeaderView({
 				onClick={() => onPollToggle(!polling)}
 			>
 				{polling ? <Radio className="h-4 w-4 animate-pulse" /> : <Radio className="h-4 w-4" />}
-				Live
+				{t("workspace.mcpLogs.live")}
 			</Button>
 			<div className="border-input flex h-7.5 flex-1 items-center gap-2 rounded-sm border">
 				<Search className="mr-0.5 ml-2 size-4" />
 				<Input
 					type="text"
 					className="!h-7 rounded-tl-none rounded-tr-sm rounded-br-sm rounded-bl-none border-none bg-slate-50 shadow-none outline-none focus-visible:ring-0"
-					placeholder="Search logs"
+					placeholder={t("workspace.logs.header.searchPlaceholder")}
 					value={localSearch}
 					onChange={(e) => handleSearchChange(e.target.value)}
 				/>
@@ -168,8 +174,8 @@ export function LogsHeaderView({
 							<CommandItem className="hover:bg-accent/50 cursor-pointer" onSelect={handleRecalculateCosts}>
 								<Calculator className="text-muted-foreground size-4" />
 								<div className="flex flex-col">
-									<span className="text-sm">Recalculate costs</span>
-									<span className="text-muted-foreground text-xs">For all logs that don't have a cost</span>
+									<span className="text-sm">{t("workspace.logs.header.recalculateCosts")}</span>
+									<span className="text-muted-foreground text-xs">{t("workspace.logs.header.recalculateCostsDescriptionShort")}</span>
 								</div>
 							</CommandItem>
 						</CommandList>

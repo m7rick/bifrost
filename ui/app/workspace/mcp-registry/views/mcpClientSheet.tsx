@@ -346,7 +346,7 @@ export default function MCPClientSheet({ mcpClient, onClose, onSubmitSuccess }: 
 	};
 
 	return (
-		<Sheet open onOpenChange={onClose}>
+		<Sheet open onOpenChange={(open) => !open && !oauthFlow && onClose()}>
 			<SheetContent className="flex w-full flex-col overflow-x-hidden pt-4 sm:max-w-[60%]">
 				<SheetHeader className="w-full p-0 px-8 py-4" showCloseButton={false} headerClassName="mb-0 sticky -top-4 bg-card z-10">
 					<div className="flex w-full items-center justify-between">
@@ -650,16 +650,14 @@ export default function MCPClientSheet({ mcpClient, onClose, onSubmitSuccess }: 
 
 							{supportsOAuthCredentialUpdate ? (
 								<div className="space-y-4">
-									<h3 className="font-semibold">OAuth Credentials</h3>
+									<h3 className="font-semibold">{i18n.t("workspace.mcpClientSheet.oauthCredentials")}</h3>
 									{isDisabled ? (
 										<div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
 											<Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-											<p>OAuth credentials cannot be rotated while the client is disabled. Re-enable the client to update credentials.</p>
+											<p>{i18n.t("workspace.mcpClientSheet.oauthCredentialsDisabledNotice")}</p>
 										</div>
 									) : (
-										<p className="text-muted-foreground text-sm">
-											Update OAuth client credentials only. Connection type, auth type, and connection URL cannot be changed.
-										</p>
+										<p className="text-muted-foreground text-sm">{i18n.t("workspace.mcpClientSheet.oauthCredentialsDescription")}</p>
 									)}
 									<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 										<FormField
@@ -667,18 +665,18 @@ export default function MCPClientSheet({ mcpClient, onClose, onSubmitSuccess }: 
 											name="oauth_config.client_id"
 											render={({ field }) => (
 												<FormItem className="flex flex-col gap-2">
-													<FormLabel>Client ID</FormLabel>
+													<FormLabel>{i18n.t("workspace.mcpClientSheet.clientId")}</FormLabel>
 													<FormControl>
 														<EnvVarInput
 															data-testid="mcpclient-input-oauth-client-id"
-															placeholder="Enter new OAuth client ID"
+														placeholder={i18n.t("workspace.mcpClientSheet.clientIdPlaceholder")}
 															disabled={isDisabled}
 															value={field.value}
 															onChange={field.onChange}
 														/>
 													</FormControl>
 													{!isDisabled && (
-														<p className="text-muted-foreground text-xs">Leave empty to keep existing credentials unchanged.</p>
+														<p className="text-muted-foreground text-xs">{i18n.t("workspace.mcpClientSheet.leaveEmptyKeepCredentials")}</p>
 													)}
 													<FormMessage />
 												</FormItem>
@@ -689,11 +687,11 @@ export default function MCPClientSheet({ mcpClient, onClose, onSubmitSuccess }: 
 											name="oauth_config.client_secret"
 											render={({ field }) => (
 												<FormItem className="flex flex-col gap-2">
-													<FormLabel>Client Secret</FormLabel>
+													<FormLabel>{i18n.t("workspace.mcpClientSheet.clientSecret")}</FormLabel>
 													<FormControl>
 														<EnvVarInput
 															data-testid="mcpclient-input-oauth-client-secret"
-															placeholder="Enter new OAuth client secret"
+														placeholder={i18n.t("workspace.mcpClientSheet.clientSecretPlaceholder")}
 															disabled={isDisabled}
 															hideValueWhenEnv
 															maskNonEnvValue
@@ -903,7 +901,7 @@ export default function MCPClientSheet({ mcpClient, onClose, onSubmitSuccess }: 
 																						type="number"
 																						step="0.000001"
 																						min="0"
-																						placeholder="0.00"
+																placeholder={i18n.t("workspace.mcpClientSheet.toolPricePlaceholder")}
 																						className="h-8 w-24"
 																						disabled={!isToolEnabled}
 																						value={field.value?.[tool.name] ?? ""}
@@ -1149,11 +1147,15 @@ export default function MCPClientSheet({ mcpClient, onClose, onSubmitSuccess }: 
 					onClose={() => setOauthFlow(null)}
 					onSuccess={() => {
 						toast({ title: "Success", description: "MCP client OAuth credentials updated successfully" });
+						toast({
+							title: i18n.t("workspace.mcpClientSheet.success"),
+							description: i18n.t("workspace.mcpClientSheet.oauthCredentialsUpdated"),
+						});
 						onSubmitSuccess();
 						onClose();
 					}}
 					onError={(error) => {
-						toast({ title: "Error", description: error, variant: "destructive" });
+						toast({ title: i18n.t("workspace.mcpClientSheet.error"), description: error, variant: "destructive" });
 					}}
 					authorizeUrl={oauthFlow.authorizeUrl}
 					oauthConfigId={oauthFlow.oauthConfigId}
